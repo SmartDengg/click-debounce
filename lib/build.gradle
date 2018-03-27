@@ -1,0 +1,20 @@
+apply plugin: 'java-library'
+
+
+repositories {
+  jcenter()
+  // Work around https://code.google.com/p/android/issues/detail?id=69270.
+  def androidHome = System.getenv("ANDROID_HOME")
+  maven {
+    url "$androidHome/extras/android/m2repository/"
+  }
+}
+
+dependencies {
+  implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+  compileOnly 'com.google.android:android:4.1.1.4'
+}
+
+sourceCompatibility = "1.7"
+targetCompatibility = "1.7"
