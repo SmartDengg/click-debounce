@@ -14,6 +14,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class DebouncedPredictor {
 
+  /** Frozen window in millions, apps may override it. */
   public static long FROZEN_WINDOW_MILLIS = 300L;
 
   private static final String TAG = DebouncedPredictor.class.getSimpleName();
