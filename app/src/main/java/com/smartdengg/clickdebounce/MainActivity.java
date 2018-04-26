@@ -5,6 +5,8 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.EditText;
+import com.smartdeng.clickdebounce.AndroidClass;
 
 public class MainActivity extends Activity
     implements View.OnClickListener, AdapterView.OnItemClickListener {
@@ -13,6 +15,8 @@ public class MainActivity extends Activity
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
     findViewById(R.id.button).setOnClickListener(this);
+
+    new AndroidClass().onClick(new EditText(this));
   }
 
   @Override public void onClick(View v) {

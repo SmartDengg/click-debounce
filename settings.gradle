@@ -1,1 +1,1 @@
-include ':app', ':clickdebounce', ':buildsrc', ':lib'
+include ':app', ':clickdebounce', ':buildsrc', ':lib-java', ':lib-android', ':plugin'

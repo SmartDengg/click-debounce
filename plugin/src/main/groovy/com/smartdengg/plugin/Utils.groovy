@@ -1,7 +1,7 @@
 package com.smartdengg.plugin
 
-import com.smartdengg.compile.DebounceModifyClassAdapter
 import com.smartdengg.compile.CompactClassWriter
+import com.smartdengg.compile.DebounceModifyClassAdapter
 import org.apache.commons.io.IOUtils
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassWriter
@@ -13,16 +13,17 @@ import java.util.zip.ZipEntry
 
 class Utils {
 
+  static String packageName
+  static String rootPackagePrefix
+
   static void modifyFile(File file) {
 
     String name = file.name
-    if (name.endsWith(".class") && !name.startsWith("R\$") &&
-        !"R.class".equals(name) &&
-        !"BuildConfig.class".equals(name)) {
+    if (name.endsWith(".class") ) {
 
-      System.out.println(name + "is changing...")
+      System.out.println(name + " is changing...")
 
-      byte[] code = com.smartdengg.plugin.Utils.visitAndReturnCode(file.getBytes())
+      byte[] code = visitAndReturnCode(file.getBytes())
 
       FileOutputStream fos = new FileOutputStream(
           file.parentFile.absolutePath + File.separator + name)
@@ -76,7 +77,7 @@ class Utils {
     return outputJar
   }
 
-  static String path2Classname(String entryName) {
+  private static String path2Classname(String entryName) {
     entryName.replace(File.separator, ".").replace(".class", "")
   }
 

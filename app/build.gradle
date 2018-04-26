@@ -1,6 +1,12 @@
 apply plugin: 'com.android.application'
 apply plugin: 'smartdengg.clickdebounce'
 
+repositories {
+  flatDir {
+    dirs 'libs'
+  }
+}
+
 android {
   compileSdkVersion 26
   buildToolsVersion "26.0.3"
@@ -29,4 +35,15 @@ dependencies {
   compile 'com.android.support.constraint:constraint-layout:1.0.2'
   compile project(':clickdebounce')
   compile files('libs/lib.jar')
+  //  compile(name: 'lib-android-debug', ext: 'aar')
+
+  fileTree(dir: 'libs', include: '**/*.aar').
+      each { File file ->
+        dependencies.add("compile", [name                         : file.name.lastIndexOf('.').
+            with { it != -1 ? file.name[0..<it] : file.name }, ext: 'aar'])
+      }
+}
+
+afterEvaluate {
+  def manifestFile = android.sourceSets.getByName("main").manifest.srcFile
 }

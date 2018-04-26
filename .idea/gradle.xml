@@ -11,7 +11,9 @@
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/buildsrc" />
             <option value="$PROJECT_DIR$/clickdebounce" />
-            <option value="$PROJECT_DIR$/lib" />
+            <option value="$PROJECT_DIR$/lib-android" />
+            <option value="$PROJECT_DIR$/lib-java" />
+            <option value="$PROJECT_DIR$/plugin" />
           </set>
         </option>
         <option name="resolveModulePerSourceSet" value="false" />

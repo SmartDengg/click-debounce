@@ -4,6 +4,7 @@ import com.android.build.api.transform.*
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.LibraryExtension
+import com.android.build.gradle.api.ApplicationVariant
 import com.android.build.gradle.internal.pipeline.TransformManager
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.io.FileUtils
@@ -21,6 +22,15 @@ public class DebounceGradlePlugin extends Transform implements Plugin<Project> {
 
     if (extension instanceof AppExtension) {
       isApp = true
+
+      extension.applicationVariants.each { ApplicationVariant applicationVariant ->
+
+        def dx = project.tasks.findByName("dex${applicationVariant.name.capitalize()}")
+        Set<File> inputFiles = dx.inputs.files.files
+
+        inputFiles.each { File file -> println "fileName = ${file.name}"
+        }
+      }
     } else if (extension instanceof LibraryExtension) {
       isLibrary = true
     }

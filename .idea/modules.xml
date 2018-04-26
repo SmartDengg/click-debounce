@@ -6,7 +6,10 @@
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/buildsrc/buildsrc.iml" filepath="$PROJECT_DIR$/buildsrc/buildsrc.iml" />
       <module fileurl="file://$PROJECT_DIR$/clickdebounce/clickdebounce.iml" filepath="$PROJECT_DIR$/clickdebounce/clickdebounce.iml" />
-      <module fileurl="file://$PROJECT_DIR$/lib/lib.iml" filepath="$PROJECT_DIR$/lib/lib.iml" />
+      <module fileurl="file://$PROJECT_DIR$/lib-java/lib.iml" filepath="$PROJECT_DIR$/lib-java/lib.iml" />
+      <module fileurl="file://$PROJECT_DIR$/lib-android/lib-android.iml" filepath="$PROJECT_DIR$/lib-android/lib-android.iml" />
+      <module fileurl="file://$PROJECT_DIR$/lib-java/lib-java.iml" filepath="$PROJECT_DIR$/lib-java/lib-java.iml" />
+      <module fileurl="file://$PROJECT_DIR$/plugin/plugin.iml" filepath="$PROJECT_DIR$/plugin/plugin.iml" />
     </modules>
   </component>
 </project>

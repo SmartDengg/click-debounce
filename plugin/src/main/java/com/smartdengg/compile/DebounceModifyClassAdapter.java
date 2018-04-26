@@ -35,14 +35,39 @@ public class DebounceModifyClassAdapter extends ClassVisitor implements Opcodes 
         name.equals("onClick") && //
         desc.equals("(Landroid/view/View;)V")) {
       methodVisitor = new View$OnClickListenerMethodAdapter(methodVisitor);
-    }
+    } else
 
-    // android.widget.AdapterView.OnItemClickListener.onItemClick(android.widget.AdapterView,android.view.View,int,int)
-    if ((Utils.isPublic(access) && !Utils.isStatic(access)) && //
-        name.equals("onItemClick") && //
-        desc.equals("(Landroid/widget/AdapterView;Landroid/view/View;IJ)V")) {
-      methodVisitor = new ListView$OnItemClickListenerMethodAdapter(methodVisitor);
-    }
+      // android.widget.AdapterView.OnItemClickListener.onItemClick(android.widget.AdapterView,android.view.View,int,int)
+      if ((Utils.isPublic(access) && !Utils.isStatic(access)) && //
+          name.equals("onItemClick") && //
+          desc.equals("(Landroid/widget/AdapterView;Landroid/view/View;IJ)V")) {
+        methodVisitor = new ListView$OnItemClickListenerMethodAdapter(methodVisitor);
+      } /*else {
+
+        methodVisitor = new MethodVisitor(Opcodes.ASM5, methodVisitor) {
+          @Override
+          public void visitFieldInsn(int opcode, String owner, String fName, String fDesc) {
+
+            if (owner.contains("com/smartdengg/") && owner.contains("R$")) {
+
+              System.out.println("opcode = ["
+                  + opcode
+                  + "], owner = ["
+                  + owner
+                  + "], fName = ["
+                  + fName
+                  + "], fDesc = ["
+                  + fDesc
+                  + "]");
+              super.visitFieldInsn(opcode,
+                  "com/smartdengg/clickdebounce/" + "R$" + owner.substring(owner.indexOf("R$") + 2),
+                  fName, fDesc);
+            } else {
+              super.visitFieldInsn(opcode, owner, fName, fDesc);
+            }
+          }
+        };
+      }*/
 
     return methodVisitor;
   }
