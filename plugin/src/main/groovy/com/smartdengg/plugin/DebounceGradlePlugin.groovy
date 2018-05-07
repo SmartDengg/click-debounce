@@ -70,9 +70,17 @@ public class DebounceGradlePlugin extends Transform implements Plugin<Project> {
   }
 
   @Override
+  void transform(TransformInvocation transformInvocation)
+      throws TransformException, InterruptedException, IOException {
+    super.transform(transformInvocation)
+  }
+
+  @Override
   void transform(Context context, Collection<TransformInput> inputs,
       Collection<TransformInput> referencedInputs, TransformOutputProvider outputProvider,
       boolean isIncremental) throws IOException, TransformException, InterruptedException {
+
+    if (!isIncremental) outputProvider.deleteAll()
 
     inputs.each { TransformInput input ->
 
@@ -123,5 +131,8 @@ public class DebounceGradlePlugin extends Transform implements Plugin<Project> {
         FileUtils.copyDirectory(directoryInput.file, dest)
       }
     }
+
+    File mappingFile = new File(context.getTemporaryDir(), "debouncedMapping.txt")
+    Utils.saveMappingFile(mappingFile)
   }
 }

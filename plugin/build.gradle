@@ -12,8 +12,9 @@ dependencies {
   compile 'com.android.tools.build:transform-api:2.0.0-deprecated-use-gradle-api'
   compile 'commons-io:commons-io:2.5'
   compile 'com.android.tools.build:gradle:2.3.3'
-  compile 'org.ow2.asm:asm:5.0.3'
-  compile 'org.ow2.asm:asm-commons:5.0.3'
+  compile 'org.ow2.asm:asm:5.1'
+  compile 'org.ow2.asm:asm-commons:5.1'
+  compile 'com.squareup.okio:okio:1.11.0'
 }
 
 repositories {

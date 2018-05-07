@@ -5,7 +5,7 @@ import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
-import static com.smartdengg.compile.Utils.weaveDebouncedAnno;
+import static com.smartdengg.compile.Utils.addDebouncedAnno;
 import static org.objectweb.asm.Opcodes.ALOAD;
 import static org.objectweb.asm.Opcodes.IFNE;
 import static org.objectweb.asm.Opcodes.INVOKESTATIC;
@@ -29,7 +29,7 @@ class ListView$OnItemClickListenerMethodAdapter extends MethodVisitor {
 
     if (weaved) return;
 
-    weaveDebouncedAnno(mv);
+    addDebouncedAnno(mv);
 
     mv.visitVarInsn(ALOAD, 2);
     mv.visitMethodInsn(INVOKESTATIC, "com/smartdengg/clickdebounce/DebouncedPredictor",

@@ -2,6 +2,8 @@ package com.smartdengg.plugin
 
 import com.smartdengg.compile.CompactClassWriter
 import com.smartdengg.compile.DebounceModifyClassAdapter
+import com.smartdengg.compile.WeavedClass
+import org.apache.commons.io.FileUtils
 import org.apache.commons.io.IOUtils
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassWriter
@@ -13,13 +15,12 @@ import java.util.zip.ZipEntry
 
 class Utils {
 
-  static String packageName
-  static String rootPackagePrefix
+  static Map<String, WeavedClass> weavedClassMap = new LinkedHashMap<>()
 
   static void modifyFile(File file) {
 
     String name = file.name
-    if (name.endsWith(".class") ) {
+    if (name.endsWith(".class")) {
 
       System.out.println(name + " is changing...")
 
@@ -73,7 +74,6 @@ class Utils {
     jarOutputStream.close()
     file.close()
 
-
     return outputJar
   }
 
@@ -94,10 +94,44 @@ class Utils {
     try {
       classReader.accept(classAdapter, ClassReader.EXPAND_FRAMES)
       weavedBytes = classWriter.toByteArray()
+
+      WeavedClass weavedClass = classAdapter.getWeavedClass()
+      weavedClassMap.remove(weavedClass.className)
+      weavedClassMap.put(weavedClass.className, weavedClass)
     } catch (Exception e) {
       println "Exception occured when visit code \n " + e.printStackTrace()
     }
 
     return weavedBytes
+  }
+
+  static void saveMappingFile(File targetFile) {
+
+    FileUtils.touch(targetFile)
+    FileUtils.deleteQuietly(targetFile)
+
+    OutputStream fileOutputStream = null
+
+    try {
+      fileOutputStream = new FileOutputStream(targetFile)
+
+      for (Map.Entry<String, WeavedClass> entry : weavedClassMap.entrySet()) {
+
+        WeavedClass weavedClass = entry.value
+        if (!weavedClass.hasDebouncedMethod()) continue
+
+        String className = weavedClass.className
+        Set<String> debouncedMethods = weavedClass.debouncedMethods
+
+        IOUtils.write(className + '\n', fileOutputStream)
+
+        for (Iterator<String> iterator = debouncedMethods.iterator(); iterator.hasNext();) {
+          String methodSignature = iterator.next()
+          IOUtils.write("    \u21E2 " + methodSignature + "\n", fileOutputStream)
+        }
+      }
+    } finally {
+      if (fileOutputStream != null) fileOutputStream.close()
+    }
   }
 }

@@ -3,6 +3,7 @@ package com.smartdengg.compile;
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
 
 /**
  * 创建时间:  2018/03/15 17:45 <br>
@@ -27,9 +28,24 @@ class Utils implements Opcodes {
     return (access & ACC_STATIC) != 0;
   }
 
-  static void weaveDebouncedAnno(MethodVisitor mv) {
+  static void addDebouncedAnno(MethodVisitor mv) {
     AnnotationVisitor annotationVisitor =
         mv.visitAnnotation("Lcom/smartdengg/clickdebounce/Debounced;", false);
     annotationVisitor.visitEnd();
+  }
+
+  static String convertSignature(String name, String desc) {
+    Type method = Type.getType(desc);
+    StringBuilder sb = new StringBuilder();
+    sb.append(method.getReturnType().getClassName()).append(" ").append(name);
+    sb.append("(");
+    for (int i = 0; i < method.getArgumentTypes().length; i++) {
+      sb.append(method.getArgumentTypes()[i].getClassName());
+      if (i != method.getArgumentTypes().length - 1) {
+        sb.append(",");
+      }
+    }
+    sb.append(")");
+    return sb.toString();
   }
 }
