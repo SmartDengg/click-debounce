@@ -17,14 +17,37 @@ class Utils {
 
   static Map<String, WeavedClass> weavedClassMap = new LinkedHashMap<>()
 
+  private static final List<String> EXCLUSIVECLASS = Collections.unmodifiableList(
+      Arrays.asList("BuildConfig.class",
+          "R.class",
+          "R\$string",
+          "R\$attr.class",
+          "R\$anim.class",
+          "R\$bool.class",
+          "R\$color.class",
+          "R\$dimen.class",
+          "R\$drawable.class",
+          "R\$id.class",
+          "R\$integer.class",
+          "R\$layout.class",
+          "R\$string.class ",
+          "R\$style.class",
+          "R\$styleable.class",))
+
   static void modifyFile(File file) {
 
     String name = file.name
     if (name.endsWith(".class")) {
 
-      System.out.println(name + " is changing...")
+      byte[] code
+      def src = file.getBytes()
 
-      byte[] code = visitAndReturnCode(file.getBytes())
+      if (EXCLUSIVECLASS.contains(name)) {
+        code = src
+      } else {
+        System.out.println(name + " is changing...")
+        code = visitAndReturnCode(src)
+      }
 
       FileOutputStream fos = new FileOutputStream(
           file.parentFile.absolutePath + File.separator + name)
@@ -36,7 +59,7 @@ class Utils {
   static File modifyJar(File jarFile, File tempDir, String hexedName) {
 
     def file = new JarFile(jarFile)
-    def outputJar = new File(tempDir, hexedName + "_" + jarFile.name)
+    def outputJar = new File(tempDir, hexedName + "_" + jarFile.name + ".tmp")
 
     println "outputJar name = " + outputJar.getName()
 
@@ -46,16 +69,15 @@ class Utils {
     while (enumeration.hasMoreElements()) {
 
       JarEntry jarEntry = (JarEntry) enumeration.nextElement()
-      InputStream inputStream = file.getInputStream(jarEntry)
+      if (jarEntry.isDirectory()) continue
 
       String entryName = jarEntry.getName()
-
       println path2Classname(entryName) + " is changing ......"
 
       ZipEntry zipEntry = new ZipEntry(entryName)
-
       jarOutputStream.putNextEntry(zipEntry)
 
+      InputStream inputStream = file.getInputStream(jarEntry)
       byte[] modifiedClassBytes = null
       byte[] sourceClassBytes = IOUtils.toByteArray(inputStream)
 

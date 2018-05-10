@@ -5,6 +5,7 @@ import com.android.build.gradle.AppExtension
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.api.ApplicationVariant
+import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.internal.pipeline.TransformManager
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.io.FileUtils
@@ -39,10 +40,14 @@ public class DebounceGradlePlugin extends Transform implements Plugin<Project> {
 
     project.afterEvaluate {
 
-      println "project buildDir = " + project.buildDir
-      println "project buildFile = " + project.buildFile
-
-      println "finish......"
+      if (isApp) {
+        project.android.applicationVariants.each { variant -> runCopyMapping(project, variant)
+        }
+      }
+      if (isLibrary) {
+        project.android.libraryVariants.each { variant -> runCopyMapping(project, variant)
+        }
+      }
     }
   }
 
@@ -54,6 +59,36 @@ public class DebounceGradlePlugin extends Transform implements Plugin<Project> {
   @Override
   Set<QualifiedContent.ContentType> getInputTypes() {
     return TransformManager.CONTENT_CLASS
+  }
+
+  private static void createAndRunCopyMappingTask(Project project, BaseVariant variant) {
+    def copyDebounceMapping = "copyDebounceMappingFor${variant.name.capitalize()}"
+
+    String variantName = variant.name
+
+    def debounceTask = project.tasks.findByName(
+        "transformClassesWithDebounceFor${variant.name.capitalize()}")
+    def dexTask = project.tasks.findByName("transformClassesWithDexFor${variant.name.capitalize()}")
+    def assembleTask = project.tasks.findByName("assemble${variant.name.capitalize()}")
+
+    project.task(copyDebounceMapping) << {
+      //    debounceTask.doLast {
+
+      def mappingFile = new File("${debounceTask.temporaryDir}/debouncedMapping.txt")
+      def newMappingDir = new File("${project.buildDir}/outputs/debounce/mapping/${variantName}")
+
+      FileUtils.touch(mappingFile)
+      if (mappingFile.exists()) {
+        FileUtils.copyFileToDirectory(mappingFile, newMappingDir, true)
+        mappingFile.delete()
+      }
+
+      println "print mapping to ${newMappingDir}/debouncedMapping.txt"
+    }
+
+    def copyDebounceMappingTask = project.tasks.findByName(copyDebounceMapping)
+    copyDebounceMappingTask.dependsOn assembleTask.taskDependencies.getDependencies(assembleTask)
+    assembleTask.dependsOn copyDebounceMappingTask
   }
 
   @Override
@@ -89,21 +124,20 @@ public class DebounceGradlePlugin extends Transform implements Plugin<Project> {
 
         File file = jarInput.getFile()
 
+        String fileName = file.getName()
         String jarName = jarInput.getName()
         String absolutePath = file.getAbsolutePath()
         String canonicalPath = file.getCanonicalPath()
-        String md5Name = DigestUtils.md5Hex(absolutePath)
+        String md5Name = DigestUtils.md5Hex(jarName)
 
         println "==================="
-        System.out.println("file = " + file.getName())
+        System.out.println("fileName = " + fileName)
         System.out.println("jarName = " + jarName)
         System.out.println("absolutePath = " + absolutePath)
         System.out.println("canonicalPath = " + canonicalPath)
         System.out.println("md5Name = " + md5Name)
 
-        if (jarName.endsWith(".jar")) jarName = jarName.substring(0, jarName.length() - 4)
-
-        File dest = outputProvider.getContentLocation(jarName + md5Name,
+        File dest = outputProvider.getContentLocation(md5Name,
             jarInput.contentTypes, jarInput.scopes, Format.JAR)
 
         System.out.println("dest = " + dest.getAbsolutePath())
@@ -112,12 +146,13 @@ public class DebounceGradlePlugin extends Transform implements Plugin<Project> {
         def modifiedJar = Utils.modifyJar(jarInput.file, context.getTemporaryDir(), md5Name)
 
         FileUtils.copyFile(modifiedJar, dest)
+        modifiedJar.delete()
       }
 
       /**foreach directoryInputs*/
       input.directoryInputs.each { DirectoryInput directoryInput ->
 
-        File directory = directoryInput.getFile()
+        File directory = directoryInput.file
 
         if (directory.isDirectory()) {
           directory.eachFileRecurse { File file -> Utils.modifyFile(file)
