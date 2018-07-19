@@ -41,11 +41,11 @@ public class DebounceGradlePlugin extends Transform implements Plugin<Project> {
     project.afterEvaluate {
 
       if (isApp) {
-        project.android.applicationVariants.each { variant -> runCopyMapping(project, variant)
+        project.android.applicationVariants.each { variant -> createAndRunCopyMappingTask(project, variant)
         }
       }
       if (isLibrary) {
-        project.android.libraryVariants.each { variant -> runCopyMapping(project, variant)
+        project.android.libraryVariants.each { variant -> createAndRunCopyMappingTask(project, variant)
         }
       }
     }
