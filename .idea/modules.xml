@@ -2,14 +2,15 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/SmartDengg_clickdebounce.iml" filepath="$PROJECT_DIR$/SmartDengg_clickdebounce.iml" />
-      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
-      <module fileurl="file://$PROJECT_DIR$/buildsrc/buildsrc.iml" filepath="$PROJECT_DIR$/buildsrc/buildsrc.iml" />
-      <module fileurl="file://$PROJECT_DIR$/clickdebounce/clickdebounce.iml" filepath="$PROJECT_DIR$/clickdebounce/clickdebounce.iml" />
-      <module fileurl="file://$PROJECT_DIR$/lib-java/lib.iml" filepath="$PROJECT_DIR$/lib-java/lib.iml" />
-      <module fileurl="file://$PROJECT_DIR$/lib-android/lib-android.iml" filepath="$PROJECT_DIR$/lib-android/lib-android.iml" />
-      <module fileurl="file://$PROJECT_DIR$/lib-java/lib-java.iml" filepath="$PROJECT_DIR$/lib-java/lib-java.iml" />
-      <module fileurl="file://$PROJECT_DIR$/plugin/plugin.iml" filepath="$PROJECT_DIR$/plugin/plugin.iml" />
+      <module fileurl="file://$PROJECT_DIR$/buildSrc/buildSrc.iml" filepath="$PROJECT_DIR$/buildSrc/buildSrc.iml" />
+      <module fileurl="file://$PROJECT_DIR$/click-debounce.iml" filepath="$PROJECT_DIR$/click-debounce.iml" />
+      <module fileurl="file://$PROJECT_DIR$/click-debounce-gradle-plugin/click-debounce-gradle-plugin.iml" filepath="$PROJECT_DIR$/click-debounce-gradle-plugin/click-debounce-gradle-plugin.iml" />
+      <module fileurl="file://$PROJECT_DIR$/click-debounce-lib-android/click-debounce-lib-android.iml" filepath="$PROJECT_DIR$/click-debounce-lib-android/click-debounce-lib-android.iml" />
+      <module fileurl="file://$PROJECT_DIR$/click-debounce-lib-java/click-debounce-lib-java.iml" filepath="$PROJECT_DIR$/click-debounce-lib-java/click-debounce-lib-java.iml" />
+      <module fileurl="file://$PROJECT_DIR$/click-debounce-runtime/click-debounce-runtime.iml" filepath="$PROJECT_DIR$/click-debounce-runtime/click-debounce-runtime.iml" />
+      <module fileurl="file://$PROJECT_DIR$/click-debounce-sample/click-debounce-sample.iml" filepath="$PROJECT_DIR$/click-debounce-sample/click-debounce-sample.iml" />
+      <module fileurl="file://$PROJECT_DIR$/plugin-debounce-gradle-plugin/plugin-debounce-gradle-plugin.iml" filepath="$PROJECT_DIR$/plugin-debounce-gradle-plugin/plugin-debounce-gradle-plugin.iml" />
+      <module fileurl="file://$PROJECT_DIR$/plugin-debounce-lib-java/plugin-debounce-lib-java.iml" filepath="$PROJECT_DIR$/plugin-debounce-lib-java/plugin-debounce-lib-java.iml" />
     </modules>
   </component>
 </project>

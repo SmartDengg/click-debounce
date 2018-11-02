@@ -1,1 +1,14 @@
-include ':app', ':clickdebounce', ':buildsrc', ':lib-java', ':lib-android', ':plugin'
+include ':click-debounce-sample', ':click-debounce-runtime', ':buildSrc',
+    ':click-debounce-lib-java', ':click-debounce-lib-android',
+    ':click-debounce-gradle-plugin'
+
+settings.rootProject.name = 'click-debounce'
+
+def initBuildFile(def projects) {
+  projects.each {
+    it.buildFileName = "${it.name}.gradle" - "$rootProject.name" - '-'
+    initBuildFile(it.children)
+  }
+}
+
+initBuildFile(settings.rootProject.children)
