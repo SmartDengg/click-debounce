@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.EditText;
-import com.smartdeng.clickdebounce.AndroidClass;
 
 public class MainActivity extends Activity
     implements View.OnClickListener, AdapterView.OnItemClickListener {

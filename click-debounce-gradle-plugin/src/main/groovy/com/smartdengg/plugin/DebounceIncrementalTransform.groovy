@@ -4,18 +4,22 @@ import com.android.annotations.NonNull
 import com.android.build.api.transform.*
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.utils.FileUtils
+import com.smartdengg.compile.WeavedClass
 
 import static com.google.common.base.Preconditions.checkNotNull
 
 class DebounceIncrementalTransform extends Transform {
 
-  def weavedClassesContainer = []
+  DebounceExtension debounceExt
+  Map<String, List<WeavedClass>> weavedVariantClassesMap
   def isApp
   def isLibrary
   def isFeature
+  private Status status
 
-  DebounceIncrementalTransform(weavedClassesContainer, isApp, isLibrary, isFeature) {
-    this.weavedClassesContainer = weavedClassesContainer
+  DebounceIncrementalTransform(debounceExt, weavedVariantClassesMap, isApp, isLibrary, isFeature) {
+    this.debounceExt = debounceExt
+    this.weavedVariantClassesMap = weavedVariantClassesMap
     this.isApp = isApp
     this.isLibrary = isLibrary
     this.isFeature = isFeature
@@ -49,6 +53,9 @@ class DebounceIncrementalTransform extends Transform {
   void transform(TransformInvocation invocation)
       throws TransformException, InterruptedException, IOException {
 
+    def weavedClassesContainer = []
+    weavedVariantClassesMap[invocation.context.variantName] = weavedClassesContainer
+
     TransformOutputProvider outputProvider = checkNotNull(invocation.getOutputProvider(),
         "Missing output object for transform " + getName())
     if (!invocation.isIncremental()) outputProvider.deleteAll()
@@ -65,14 +72,18 @@ class DebounceIncrementalTransform extends Transform {
             jarInput.scopes,
             Format.JAR)
 
-        //        if (Utils.loggable) println "jarinput = ${inputJar.path}"
-        //        if (Utils.loggable) println "outputJar = ${outputJar.path}"
+        //        if (debounceExt.loggable) println "jarinput = ${inputJar.path}"
+        //        if (debounceExt.loggable) println "outputJar = ${outputJar.path}"
 
         if (invocation.isIncremental()) {
 
-          if (Utils.isLoggable()) println "inIncremental jar = ${jarInput.name}:${jarInput.status}"
+          status = jarInput.status
 
-          switch (jarInput.getStatus()) {
+          if (status != Status.NOTCHANGED) {
+            if (debounceExt.isLoggable()) println "changed jar = ${jarInput.name}:${status}"
+          }
+
+          switch (status) {
             case Status.NOTCHANGED:
               break
             case Status.ADDED:
@@ -98,13 +109,13 @@ class DebounceIncrementalTransform extends Transform {
             directoryInput.scopes,
             Format.DIRECTORY)
 
-        //        if (Utils.isLoggable()) println "directoryInputPath = ${inputDir.path}"
-        //        if (Utils.isLoggable()) println "directoryOutputPath = ${outputDir.path}"
+        //        if (debounceExt.loggable) println "directoryInputPath = ${inputDir.path}"
+        //        if (debounceExt.loggable) println "directoryOutputPath = ${outputDir.path}"
 
         if (invocation.isIncremental()) {
           directoryInput.changedFiles.each { File inputFile, Status status ->
 
-            if (Utils.isLoggable()) println "inIncremental file = ${inputFile.name}:${status}"
+            if (debounceExt.loggable) println "changed file = ${inputFile.name}:${status}"
 
             switch (status) {
               case Status.NOTCHANGED:

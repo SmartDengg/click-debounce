@@ -16,9 +16,6 @@ import java.util.concurrent.TimeUnit
 
 class DebounceGradlePlugin implements Plugin<Project> {
 
-  static def weavedProjectClassesMap = new LinkedHashMap<String, List<WeavedClass>>()
-  def weavedClasses = []
-  def project
   def isApp
   def isLibrary
   def isFeature
@@ -30,7 +27,6 @@ class DebounceGradlePlugin implements Plugin<Project> {
   }
 
   @Override void apply(Project project) {
-    this.project = project
 
     def androidPlugin = [AppPlugin, LibraryPlugin, FeaturePlugin]
         .collect { project.plugins.findPlugin(it) as BasePlugin }
@@ -48,6 +44,8 @@ class DebounceGradlePlugin implements Plugin<Project> {
     project.configurations.implementation.dependencies.add(
         project.dependencies.create(project.rootProject.findProject("click-debounce-runtime")))
 
+    project.extensions["${DebounceExtension.NAME}"] = project.objects.newInstance(DebounceExtension)
+
     def extension = project.extensions.getByName("android") as BaseExtension
 
     forExtension(extension) { isApp, isLibrary, isFeature ->
@@ -56,24 +54,25 @@ class DebounceGradlePlugin implements Plugin<Project> {
       this.isFeature = isFeature
     }
 
-    if (weavedProjectClassesMap[project.name]) {
-      weavedClasses = weavedProjectClassesMap[project.name]
-    } else {
-      weavedProjectClassesMap.put(project.name, weavedClasses)
-    }
+    def weavedVariantClassesMap = new LinkedHashMap<String, List<WeavedClass>>()
 
     extension.registerTransform(
-        new DebounceIncrementalTransform(weavedClasses, isApp, isLibrary, isFeature))
+        new DebounceIncrementalTransform(project["${DebounceExtension.NAME}"],
+            weavedVariantClassesMap, isApp, isLibrary, isFeature))
 
     project.afterEvaluate {
-      forExtension(extension) { variant -> createWriteMappingTask(project, variant)
+
+      forExtension(extension) { variant ->
+
+        createWriteMappingTask(project, variant, weavedVariantClassesMap)
       }
     }
   }
 
-  static void createWriteMappingTask(Project project, BaseVariant variant) {
+  static void createWriteMappingTask(Project project, BaseVariant variant,
+      Map<String, List<WeavedClass>> weavedVariantClassesMap) {
 
-    def outputDebounceMapping = "outputMappingFor${variant.name.capitalize()}"
+    def mappingTaskName = "outputMappingFor${variant.name.capitalize()}"
     Task debounceTask = project.tasks["transformClassesWithDebounceFor${variant.name.capitalize()}"]
 
     debounceTask.configure {
@@ -89,17 +88,18 @@ class DebounceGradlePlugin implements Plugin<Project> {
     }
 
     Task outputMappingTask = project.tasks.create(//
-        name: "${outputDebounceMapping}",
+        name: "${mappingTaskName}",
         type: OutputMappingTask,
-        constructorArgs: [weavedProjectClassesMap]) {
+        constructorArgs: [variant.name, weavedVariantClassesMap]) {
 
       targetMappingFile =
           FileUtils.join(project.buildDir, AndroidProject.FD_OUTPUTS, 'debounce', 'mapping',
               variant.name, 'debouncedMapping.txt')
     }
 
-    outputMappingTask.onlyIf { debounceTask.didWork }
     debounceTask.finalizedBy(outputMappingTask)
+
+    outputMappingTask.onlyIf { debounceTask.didWork }
     outputMappingTask.dependsOn(debounceTask)
   }
 

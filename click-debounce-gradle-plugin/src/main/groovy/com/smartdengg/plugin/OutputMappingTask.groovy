@@ -3,7 +3,6 @@ package com.smartdengg.plugin
 import com.smartdengg.compile.WeavedClass
 import org.apache.commons.io.FileUtils
 import org.gradle.api.DefaultTask
-import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 
@@ -16,27 +15,28 @@ class OutputMappingTask extends DefaultTask {
     description = 'write debounced mapping file'
   }
 
-  @Input
-  Map<String, List<WeavedClass>> weavedProjectClassesMap
+  Map<String, List<WeavedClass>> weavedVariantClassesMap
+  String variantName
 
   @OutputFile
   File targetMappingFile
 
   @Inject
-  OutputMappingTask(Map<String, List<WeavedClass>> weavedProjectClassesMap) {
-    this.weavedProjectClassesMap = weavedProjectClassesMap
+  OutputMappingTask(String variantName, Map<String, List<WeavedClass>> weavedVariantClassesMap) {
+    this.variantName = variantName
+    this.weavedVariantClassesMap = weavedVariantClassesMap
   }
 
   @TaskAction
   void wrireMapping() {
 
-    project.layout.files()
+    final DebounceExtension debounceExt = project.extensions.getByName(DebounceExtension.NAME)
 
     FileUtils.touch(targetMappingFile)
 
     targetMappingFile.withWriter { writer ->
 
-      weavedProjectClassesMap[project.name].findAll { weavedClass ->
+      weavedVariantClassesMap[variantName].findAll { weavedClass ->
 
         weavedClass.hasDebouncedMethod()
       }.each { touchedWeavedClass ->
@@ -45,8 +45,11 @@ class OutputMappingTask extends DefaultTask {
         Set<String> debouncedMethods = touchedWeavedClass.debouncedMethods
         writer.writeLine "$className"
 
+        if (debounceExt.loggable) println className
+
         for (def methodSignature in debouncedMethods) {
           writer.writeLine "    \u21E2  $methodSignature"
+          if (debounceExt.loggable) println "    \u21E2  $methodSignature"
         }
       }
     }
