@@ -1,15 +1,7 @@
 apply plugin: 'com.android.application'
 apply plugin: 'smartdengg.clickdebounce'
 
-repositories {
-  flatDir {
-    dirs 'libs'
-  }
-}
-
-debounceExt {
-  loggable = true
-}
+debounce.loggable = true
 
 android {
   compileSdkVersion 26
@@ -23,6 +15,9 @@ android {
     testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
   }
   buildTypes {
+    debug {
+      minifyEnabled false
+    }
     release {
       minifyEnabled false
       proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
@@ -49,6 +44,12 @@ android {
 
   lintOptions {
     abortOnError false
+  }
+}
+
+repositories {
+  flatDir {
+    dirs 'libs'
   }
 }
 

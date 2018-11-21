@@ -11,6 +11,7 @@ import java.util.Set;
  */
 public class WeavedClass implements Serializable {
   private static final long serialVersionUID = 211794679952616432L;
+
   private String className;
   private Set<String> debouncedMethods = new LinkedHashSet<>();
 

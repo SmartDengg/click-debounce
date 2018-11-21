@@ -5,9 +5,11 @@ import com.android.build.api.transform.*
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.utils.FileUtils
 import com.smartdengg.compile.WeavedClass
+import groovy.util.logging.Slf4j
 
 import static com.google.common.base.Preconditions.checkNotNull
 
+@Slf4j
 class DebounceIncrementalTransform extends Transform {
 
   DebounceExtension debounceExt
@@ -72,8 +74,8 @@ class DebounceIncrementalTransform extends Transform {
             jarInput.scopes,
             Format.JAR)
 
-        //        if (debounceExt.loggable) println "jarinput = ${inputJar.path}"
-        //        if (debounceExt.loggable) println "outputJar = ${outputJar.path}"
+        log.debug('input jar = ', inputJar.path)
+        log.debug('output jar = ', outputJar.path)
 
         if (invocation.isIncremental()) {
 
@@ -109,8 +111,8 @@ class DebounceIncrementalTransform extends Transform {
             directoryInput.scopes,
             Format.DIRECTORY)
 
-        //        if (debounceExt.loggable) println "directoryInputPath = ${inputDir.path}"
-        //        if (debounceExt.loggable) println "directoryOutputPath = ${outputDir.path}"
+        log.debug('input directory = ', inputDir.path)
+        log.debug('output directory = ', outputDir.path)
 
         if (invocation.isIncremental()) {
           directoryInput.changedFiles.each { File inputFile, Status status ->

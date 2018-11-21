@@ -12,8 +12,8 @@
             <option value="$PROJECT_DIR$/click-debounce-gradle-plugin" />
             <option value="$PROJECT_DIR$/click-debounce-lib-android" />
             <option value="$PROJECT_DIR$/click-debounce-lib-java" />
-            <option value="$PROJECT_DIR$/click-debounce-runtime" />
             <option value="$PROJECT_DIR$/click-debounce-sample" />
+            <option value="$PROJECT_DIR$/runtime/click-debounce-runtime" />
           </set>
         </option>
         <option name="resolveModulePerSourceSet" value="false" />

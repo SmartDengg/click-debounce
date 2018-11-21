@@ -5,6 +5,7 @@ import com.android.build.gradle.api.BaseVariant
 import com.android.builder.model.AndroidProject
 import com.android.utils.FileUtils
 import com.smartdengg.compile.WeavedClass
+import groovy.util.logging.Slf4j
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -14,11 +15,19 @@ import org.gradle.internal.reflect.Instantiator
 import javax.inject.Inject
 import java.util.concurrent.TimeUnit
 
+/***
+ *
+ * ./gradlew clean build -Dorg.gradle.daemon=false -Dorg.gradle.debug=true
+ *
+ * */
+
+@Slf4j
 class DebounceGradlePlugin implements Plugin<Project> {
 
   def isApp
   def isLibrary
   def isFeature
+
   private final Instantiator instantiator
 
   @Inject
@@ -31,6 +40,8 @@ class DebounceGradlePlugin implements Plugin<Project> {
     def androidPlugin = [AppPlugin, LibraryPlugin, FeaturePlugin]
         .collect { project.plugins.findPlugin(it) as BasePlugin }
         .find { it != null }
+
+    log.debug('Found Plugin: {}', androidPlugin)
 
     if (!androidPlugin) {
       throw new GradleException(
@@ -48,7 +59,7 @@ class DebounceGradlePlugin implements Plugin<Project> {
 
     def extension = project.extensions.getByName("android") as BaseExtension
 
-    forExtension(extension) { isApp, isLibrary, isFeature ->
+    Utils.forExtension(extension) { isApp, isLibrary, isFeature ->
       this.isApp = isApp
       this.isLibrary = isLibrary
       this.isFeature = isFeature
@@ -62,7 +73,7 @@ class DebounceGradlePlugin implements Plugin<Project> {
 
     project.afterEvaluate {
 
-      forExtension(extension) { variant ->
+      Utils.forExtension(extension) { variant ->
 
         createWriteMappingTask(project, variant, weavedVariantClassesMap)
       }
@@ -82,17 +93,19 @@ class DebounceGradlePlugin implements Plugin<Project> {
       }
       doLast {
         println()
-        println " COST: ${TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime)} ms"
+        println " --> COST: ${TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime)} ms"
         println()
       }
     }
 
     Task outputMappingTask = project.tasks.create(//
         name: "${mappingTaskName}",
-        type: OutputMappingTask,
-        constructorArgs: [variant.name, weavedVariantClassesMap]) {
+        type: OutputMappingTask) {
 
-      targetMappingFile =
+      classes = weavedVariantClassesMap
+
+      variantName = variant.name
+      outputMappingFile =
           FileUtils.join(project.buildDir, AndroidProject.FD_OUTPUTS, 'debounce', 'mapping',
               variant.name, 'debouncedMapping.txt')
     }
@@ -101,33 +114,5 @@ class DebounceGradlePlugin implements Plugin<Project> {
 
     outputMappingTask.onlyIf { debounceTask.didWork }
     outputMappingTask.dependsOn(debounceTask)
-  }
-
-  private static void forExtension(BaseExtension extension, Closure closure) {
-
-    def findExtensionType
-    if (closure.maximumNumberOfParameters == 3) findExtensionType = true
-
-    if (extension instanceof AppExtension) {
-      if (findExtensionType) {
-        closure.call(true, false, false)
-      } else {
-        extension.applicationVariants.all(closure)
-      }
-    }
-    if (extension instanceof LibraryExtension) {
-      if (findExtensionType) {
-        closure.call(false, true, false)
-      } else {
-        extension.libraryVariants.all(closure)
-      }
-    }
-    if (extension instanceof FeatureExtension) {
-      if (findExtensionType) {
-        closure.call(false, false, true)
-      } else {
-        extension.featureVariants.all(closure)
-      }
-    }
   }
 }

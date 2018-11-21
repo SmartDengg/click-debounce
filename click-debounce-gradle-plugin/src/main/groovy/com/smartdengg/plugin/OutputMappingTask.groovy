@@ -3,10 +3,12 @@ package com.smartdengg.plugin
 import com.smartdengg.compile.WeavedClass
 import org.apache.commons.io.FileUtils
 import org.gradle.api.DefaultTask
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
-
-import javax.inject.Inject
 
 class OutputMappingTask extends DefaultTask {
 
@@ -15,28 +17,26 @@ class OutputMappingTask extends DefaultTask {
     description = 'write debounced mapping file'
   }
 
-  Map<String, List<WeavedClass>> weavedVariantClassesMap
-  String variantName
+  @Input
+  Property<String> variantName = project.objects.property(String.class)
 
   @OutputFile
-  File targetMappingFile
+  RegularFileProperty outputMappingFile = newOutputFile()
 
-  @Inject
-  OutputMappingTask(String variantName, Map<String, List<WeavedClass>> weavedVariantClassesMap) {
-    this.variantName = variantName
-    this.weavedVariantClassesMap = weavedVariantClassesMap
-  }
+  @Internal
+  Property<Map> classes = project.objects.property(Map.class)
 
   @TaskAction
   void wrireMapping() {
 
-    final DebounceExtension debounceExt = project.extensions.getByName(DebounceExtension.NAME)
+    def loggable = (project.extensions["$DebounceExtension.NAME"] as DebounceExtension).loggable
+    def mappingFile = outputMappingFile.get().asFile
 
-    FileUtils.touch(targetMappingFile)
+    FileUtils.touch(mappingFile)
 
-    targetMappingFile.withWriter { writer ->
+    mappingFile.withWriter { writer ->
 
-      weavedVariantClassesMap[variantName].findAll { weavedClass ->
+      classes.get()[variantName.get()].findAll { WeavedClass weavedClass ->
 
         weavedClass.hasDebouncedMethod()
       }.each { touchedWeavedClass ->
@@ -45,14 +45,14 @@ class OutputMappingTask extends DefaultTask {
         Set<String> debouncedMethods = touchedWeavedClass.debouncedMethods
         writer.writeLine "$className"
 
-        if (debounceExt.loggable) println className
+        if (loggable) println className
 
         for (def methodSignature in debouncedMethods) {
           writer.writeLine "    \u21E2  $methodSignature"
-          if (debounceExt.loggable) println "    \u21E2  $methodSignature"
+          if (loggable) println "    \u21E2  $methodSignature"
         }
       }
     }
-    println "Success wrote TXT mapping report to file://${targetMappingFile}"
+    println "Success wrote TXT mapping report to file://${outputMappingFile}"
   }
 }

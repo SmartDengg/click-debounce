@@ -1,7 +1,7 @@
 apply plugin: 'com.android.library'
 apply plugin: 'smartdengg.clickdebounce'
 
-debounceExt {
+debounce {
   loggable = true
 }
 

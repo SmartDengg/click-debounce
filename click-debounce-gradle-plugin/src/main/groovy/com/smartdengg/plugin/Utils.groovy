@@ -1,6 +1,10 @@
 package com.smartdengg.plugin
 
 import com.android.SdkConstants
+import com.android.build.gradle.AppExtension
+import com.android.build.gradle.BaseExtension
+import com.android.build.gradle.FeatureExtension
+import com.android.build.gradle.LibraryExtension
 import com.android.utils.FileUtils
 import com.google.common.collect.Lists
 
@@ -62,5 +66,33 @@ class Utils {
   static boolean isMatchCondition(String name) {
     name.endsWith(SdkConstants.DOT_CLASS) && //
         !("${path2Classname(name).split("\\.").last()}.class".toString() in EXCLUSIVECLASS)
+  }
+
+  public static void forExtension(BaseExtension extension, Closure closure) {
+
+    def findExtensionType
+    if (closure.maximumNumberOfParameters == 3) findExtensionType = true
+
+    if (extension instanceof AppExtension) {
+      if (findExtensionType) {
+        closure.call(true, false, false)
+      } else {
+        extension.applicationVariants.all(closure)
+      }
+    }
+    if (extension instanceof LibraryExtension) {
+      if (findExtensionType) {
+        closure.call(false, true, false)
+      } else {
+        extension.libraryVariants.all(closure)
+      }
+    }
+    if (extension instanceof FeatureExtension) {
+      if (findExtensionType) {
+        closure.call(false, false, true)
+      } else {
+        extension.featureVariants.all(closure)
+      }
+    }
   }
 }

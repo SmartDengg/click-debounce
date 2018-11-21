@@ -7,6 +7,6 @@ package com.smartdengg.plugin;
  */
 public class DebounceExtension {
 
-  static final String NAME = "debounceExt";
+  static final String NAME = "debounce";
   boolean loggable;
 }

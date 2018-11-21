@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
-echo "test gradle clean build"
 
-./gradlew clean -m
+echo "build sample"
+
+cd click-debounce-sample
+
+../gradlew clean build
+
+cd ..
