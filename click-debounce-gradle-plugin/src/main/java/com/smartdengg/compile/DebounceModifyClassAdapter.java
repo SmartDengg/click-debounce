@@ -40,7 +40,7 @@ public class DebounceModifyClassAdapter extends ClassVisitor implements Opcodes 
       weavedClass.addDebouncedMethod(convertSignature(name, desc));
     }
 
-    // android.widget.AdapterView.OnItemClickListener.onItemClick(android.widget.AdapterView,android.view.View,int,int)
+    // android.widget.AdapterView.OnItemClickListener.onItemClick(android.widget.AdapterView,android.view.View,int,long)
     if ((Utils.isPublic(access) && !Utils.isStatic(access)) && //
         name.equals("onItemClick") && //
         desc.equals("(Landroid/widget/AdapterView;Landroid/view/View;IJ)V")) {
