@@ -52,8 +52,11 @@ class DebounceGradlePlugin implements Plugin<Project> {
       url "https://jitpack.io"
     }
 
+    //    project.configurations.implementation.dependencies.add(
+    //        project.dependencies.create(project.rootProject.findProject("click-debounce-runtime")))
+
     project.configurations.implementation.dependencies.add(
-        project.dependencies.create(project.rootProject.findProject("click-debounce-runtime")))
+        project.dependencies.create('com.github.SmartDengg:asm-clickdebounce-runtime:1.0.0'))
 
     project.extensions["${DebounceExtension.NAME}"] = project.objects.newInstance(DebounceExtension)
 

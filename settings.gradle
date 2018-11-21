@@ -5,7 +5,7 @@ include ':click-debounce-sample', ':buildSrc',
 include ':click-debounce-runtime'
 project(':click-debounce-runtime').projectDir = new File('runtime/click-debounce-runtime')
 
-settings.rootProject.name = 'click-debounce-compiler'
+settings.rootProject.name = 'debounce-compiler'
 
 def initBuildFile(def projects) {
   projects.each {

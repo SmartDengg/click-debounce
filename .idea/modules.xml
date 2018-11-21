@@ -3,12 +3,12 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/buildSrc/buildSrc.iml" filepath="$PROJECT_DIR$/buildSrc/buildSrc.iml" />
-      <module fileurl="file://$PROJECT_DIR$/click-debounce-compiler.iml" filepath="$PROJECT_DIR$/click-debounce-compiler.iml" />
       <module fileurl="file://$PROJECT_DIR$/click-debounce-gradle-plugin/click-debounce-gradle-plugin.iml" filepath="$PROJECT_DIR$/click-debounce-gradle-plugin/click-debounce-gradle-plugin.iml" />
       <module fileurl="file://$PROJECT_DIR$/click-debounce-lib-android/click-debounce-lib-android.iml" filepath="$PROJECT_DIR$/click-debounce-lib-android/click-debounce-lib-android.iml" />
       <module fileurl="file://$PROJECT_DIR$/click-debounce-lib-java/click-debounce-lib-java.iml" filepath="$PROJECT_DIR$/click-debounce-lib-java/click-debounce-lib-java.iml" />
       <module fileurl="file://$PROJECT_DIR$/runtime/click-debounce-runtime/click-debounce-runtime.iml" filepath="$PROJECT_DIR$/runtime/click-debounce-runtime/click-debounce-runtime.iml" />
       <module fileurl="file://$PROJECT_DIR$/click-debounce-sample/click-debounce-sample.iml" filepath="$PROJECT_DIR$/click-debounce-sample/click-debounce-sample.iml" />
+      <module fileurl="file://$PROJECT_DIR$/debounce-compiler.iml" filepath="$PROJECT_DIR$/debounce-compiler.iml" />
     </modules>
   </component>
 </project>
