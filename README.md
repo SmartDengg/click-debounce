@@ -61,7 +61,7 @@ apply plugin: 'smartdengg.clickdebounce'
 ```
 
 
-**Step 3**. Enable logging by adding the following code to your build.gradle:
+**Step 3 (Optional)**. Enable logging by adding the following code to your build.gradle:
 
 ```groovy
 
