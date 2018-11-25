@@ -9,7 +9,7 @@ It is a gradle plugin that uses bytecode weaving technology to solve the click d
 
 Safe, efficient, easy to use, support incremental build to avoid waste of build time.
 
-I also wrote a [blog](https://www.jianshu.com/p/28751130c038) to share my ideas to solve the click debounce.
+I also wrote a **[blog](https://www.jianshu.com/p/28751130c038)** to share my ideas to solve the click debounce.
 
 *Note: This repository is just a gradle plugin, responsible for bytecode weaving work, Android runtime library please move [here](https://github.com/SmartDengg/asm-clickdebounce-runtime).*
 
