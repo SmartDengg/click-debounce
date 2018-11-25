@@ -15,12 +15,6 @@ import org.gradle.internal.reflect.Instantiator
 import javax.inject.Inject
 import java.util.concurrent.TimeUnit
 
-/***
- *
- * ./gradlew clean build -Dorg.gradle.daemon=false -Dorg.gradle.debug=true
- *
- * */
-
 @Slf4j
 class DebounceGradlePlugin implements Plugin<Project> {
 

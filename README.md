@@ -1,9 +1,18 @@
+| README.md |
+|:---|
+
 # asm-clickdebounce
 
 [![](https://jitpack.io/v/SmartDengg/asm-clickdebounce.svg)](https://jitpack.io/#SmartDengg/asm-clickdebounce)
 
+It is a gradle plugin that uses bytecode weaving technology to solve the click debounce problem of Android applications.
 
-TO-DO
+Safe, efficient, easy to use, support incremental build to avoid waste of build time.
+
+I also wrote a [blog](https://www.jianshu.com/p/28751130c038) to share my ideas to solve the click debounce.
+
+*Note: This repository is just a gradle plugin, responsible for bytecode weaving work, Android runtime library please move [here](https://github.com/SmartDengg/asm-clickdebounce-runtime).*
+
 
 ## Requirements
 
@@ -20,7 +29,7 @@ $ ./gradlew build
 
 ```
 
-## Getting Start
+## Getting Started
 
 **Step 1**. Add the JitPack repository and the plugin to your buildscript:
 
@@ -63,13 +72,14 @@ debounce.loggable = true
 
 ## How it works
 
+**Will not intercept the touch event delivery, only intercepted in the callback of the click event, so that it will not be passed to the business logic.**
+
 ![](art/clickdebounce.png)
 
 ## Support
 
 - [x] [View.OnClickListener](https://developer.android.com/reference/android/view/View.OnClickListener)
 - [x] [AdapterView.OnItemClickListener](https://developer.android.com/reference/android/widget/AdapterView.OnItemClickListener)
-
 
 ## R8 / ProGuard (Not Required)
 
@@ -92,3 +102,8 @@ email : hi4joker@gmail.com
 blog  : [小鄧子](https://www.jianshu.com/u/df40282480b4)
 
 weibo : [-小鄧子-](https://weibo.com/5367097592/profile?topnav=1&wvr=6)
+
+
+## License
+
+See the [LICENSE](LICENSE) file for license rights and limitations (MIT).
