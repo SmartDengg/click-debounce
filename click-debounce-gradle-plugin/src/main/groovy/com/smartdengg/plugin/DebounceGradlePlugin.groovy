@@ -10,24 +10,11 @@ import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
-import org.gradle.internal.reflect.Instantiator
 
-import javax.inject.Inject
 import java.util.concurrent.TimeUnit
 
 @Slf4j
 class DebounceGradlePlugin implements Plugin<Project> {
-
-  def isApp
-  def isLibrary
-  def isFeature
-
-  private final Instantiator instantiator
-
-  @Inject
-  DebounceGradlePlugin(Instantiator instantiator) {
-    this.instantiator = instantiator
-  }
 
   @Override void apply(Project project) {
 
@@ -56,17 +43,11 @@ class DebounceGradlePlugin implements Plugin<Project> {
 
     def extension = project.extensions.getByName("android") as BaseExtension
 
-    Utils.forExtension(extension) { isApp, isLibrary, isFeature ->
-      this.isApp = isApp
-      this.isLibrary = isLibrary
-      this.isFeature = isFeature
-    }
-
     def weavedVariantClassesMap = new LinkedHashMap<String, List<WeavedClass>>()
 
     extension.registerTransform(
-        new DebounceIncrementalTransform(project["${DebounceExtension.NAME}"],
-            weavedVariantClassesMap, isApp, isLibrary, isFeature))
+        new DebounceIncrementalTransform(project."${DebounceExtension.NAME}",
+            weavedVariantClassesMap, androidPlugin instanceof AppPlugin))
 
     project.afterEvaluate {
 
@@ -85,9 +66,7 @@ class DebounceGradlePlugin implements Plugin<Project> {
 
     debounceTask.configure {
       def startTime
-      doFirst {
-        startTime = System.nanoTime()
-      }
+      doFirst { startTime = System.nanoTime() }
       doLast {
         println()
         println " --> COST: ${TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime)} ms"
@@ -98,18 +77,15 @@ class DebounceGradlePlugin implements Plugin<Project> {
     Task outputMappingTask = project.tasks.create(//
         name: "${mappingTaskName}",
         type: OutputMappingTask) {
-
       classes = weavedVariantClassesMap
-
       variantName = variant.name
       outputMappingFile =
           FileUtils.join(project.buildDir, AndroidProject.FD_OUTPUTS, 'debounce', 'mapping',
-              variant.name, 'debouncedMapping.txt')
+              variant.name, 'debouncedMapping.xml')
     }
 
     debounceTask.finalizedBy(outputMappingTask)
-
     outputMappingTask.onlyIf { debounceTask.didWork }
-    outputMappingTask.dependsOn(debounceTask)
+    outputMappingTask.inputs.files(debounceTask.outputs.files)
   }
 }

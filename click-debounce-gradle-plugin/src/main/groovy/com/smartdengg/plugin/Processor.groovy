@@ -1,58 +1,66 @@
 package com.smartdengg.plugin
 
-import com.google.common.io.Files
+import com.google.common.collect.ImmutableMap
+import com.google.common.collect.Iterables
 import com.smartdengg.compile.CompactClassWriter
 import com.smartdengg.compile.DebounceModifyClassAdapter
 import com.smartdengg.compile.WeavedClass
 import groovy.transform.PackageScope
-import org.apache.commons.io.IOUtils
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassWriter
 
-import java.util.zip.ZipEntry
-import java.util.zip.ZipInputStream
-import java.util.zip.ZipOutputStream
+import java.nio.file.*
+import java.nio.file.attribute.BasicFileAttributes
 
 class Processor {
 
-  @PackageScope static void transformJar(File inputJar, File outputJar,
+  @PackageScope static void processJarPath(Path inputPath, Path outputPath,
       List<WeavedClass> weavedClasses) throws IOException {
-    Files.createParentDirs(outputJar)
 
-    new ZipOutputStream(new FileOutputStream(outputJar)).withCloseable { outputStream ->
+    Map<String, String> env = ImmutableMap.of('create', 'true')
+    URI inputUri = URI.create("jar:file:$inputPath")
+    URI outputUri = URI.create("jar:file:$outputPath")
 
-      new ZipInputStream(new FileInputStream(inputJar)).withCloseable { inputStream ->
-
-        ZipEntry entry
-        while ((entry = inputStream.nextEntry) != null) {
-
-          if (!entry.isDirectory() && Utils.isMatchCondition(entry.name)) {
-
-            byte[] newContent = visitAndReturnBytecode(entry.name,
-                IOUtils.toByteArray(inputStream), weavedClasses)
-
-            outputStream.putNextEntry(new ZipEntry(entry.name))
-            outputStream.write(newContent)
-            outputStream.closeEntry()
-          }
-        }
+    FileSystems.newFileSystem(inputUri, env).withCloseable { inputZFS ->
+      FileSystems.newFileSystem(outputUri, env).withCloseable { outputZFS ->
+        Path inputRoot = Iterables.getOnlyElement(inputZFS.rootDirectories)
+        Path outputRoot = Iterables.getOnlyElement(outputZFS.rootDirectories)
+        processFilePath(inputRoot, outputRoot, weavedClasses)
       }
     }
   }
 
-  static void transformFile(File inputFile, File outputFile, List<WeavedClass> weavedClasses)
-      throws IOException {
+  @PackageScope static void processFilePath(Path inputRoot, Path outputRoot,
+      List<WeavedClass> weavedClasses) {
 
-    Files.createParentDirs(outputFile)
-    byte[] newContent = visitAndReturnBytecode(inputFile.name, inputFile.bytes, weavedClasses)
+    Files.walkFileTree(inputRoot, new SimpleFileVisitor<Path>() {
+      @Override
+      FileVisitResult visitFile(Path inputPath, BasicFileAttributes attrs) throws IOException {
+        Path outputPath = Utils.toOutputPath(outputRoot, inputRoot, inputPath)
+        processBytecode(inputPath, outputPath, weavedClasses)
+        return FileVisitResult.CONTINUE
+      }
 
-    outputFile.withOutputStream {
-      it.write(newContent)
+      @Override
+      FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+        Path outputPath = Utils.toOutputPath(outputRoot, inputRoot, dir)
+        Files.createDirectories(outputPath)
+        return FileVisitResult.CONTINUE
+      }
+    })
+  }
+
+  static void processBytecode(Path inputPath, Path outputPath, List<WeavedClass> weavedClasses) {
+    if (Utils.isMatchCondition(inputPath.toString())) {
+      byte[] inputBytes = Files.readAllBytes(inputPath)
+      byte[] outputBytes = visitAndReturnBytecode(inputBytes, weavedClasses)
+      Files.write(outputPath, outputBytes)
+    } else {
+      Files.copy(inputPath, outputPath)
     }
   }
 
-  @PackageScope static byte[] visitAndReturnBytecode(String name, byte[] bytes,
-      List<WeavedClass> weavedClasses) {
+  static byte[] visitAndReturnBytecode(byte[] bytes, List<WeavedClass> weavedClasses) {
 
     def weavedBytes = bytes
 
@@ -60,7 +68,6 @@ class Processor {
     ClassWriter classWriter =
         new CompactClassWriter(classReader,
             ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS)
-
     DebounceModifyClassAdapter classAdapter = new DebounceModifyClassAdapter(classWriter)
     try {
       classReader.accept(classAdapter, ClassReader.EXPAND_FRAMES)

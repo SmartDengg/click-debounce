@@ -7,6 +7,9 @@ import com.android.utils.FileUtils
 import com.smartdengg.compile.WeavedClass
 import groovy.util.logging.Slf4j
 
+import java.nio.file.Files
+import java.nio.file.Path
+
 import static com.google.common.base.Preconditions.checkNotNull
 
 @Slf4j
@@ -15,16 +18,11 @@ class DebounceIncrementalTransform extends Transform {
   DebounceExtension debounceExt
   Map<String, List<WeavedClass>> weavedVariantClassesMap
   def isApp
-  def isLibrary
-  def isFeature
-  private Status status
 
-  DebounceIncrementalTransform(debounceExt, weavedVariantClassesMap, isApp, isLibrary, isFeature) {
+  DebounceIncrementalTransform(debounceExt, weavedVariantClassesMap, isApp) {
     this.debounceExt = debounceExt
     this.weavedVariantClassesMap = weavedVariantClassesMap
     this.isApp = isApp
-    this.isLibrary = isLibrary
-    this.isFeature = isFeature
   }
 
   @NonNull
@@ -42,8 +40,8 @@ class DebounceIncrementalTransform extends Transform {
   @NonNull
   @Override
   Set<QualifiedContent.Scope> getScopes() {
-    if (isLibrary || isFeature) return TransformManager.PROJECT_ONLY
-    return TransformManager.SCOPE_FULL_PROJECT
+    if (isApp) return TransformManager.SCOPE_FULL_PROJECT
+    return TransformManager.PROJECT_ONLY
   }
 
   @Override
@@ -59,7 +57,7 @@ class DebounceIncrementalTransform extends Transform {
     weavedVariantClassesMap[invocation.context.variantName] = weavedClassesContainer
 
     TransformOutputProvider outputProvider = checkNotNull(invocation.getOutputProvider(),
-        "Missing output object for transform " + getName())
+        "Missing output object for processJarPath " + getName())
     if (!invocation.isIncremental()) outputProvider.deleteAll()
 
     invocation.inputs.each { inputs ->
@@ -67,81 +65,79 @@ class DebounceIncrementalTransform extends Transform {
       /**/
       inputs.jarInputs.each { jarInput ->
 
-        File inputJar = jarInput.file
-        File outputJar = outputProvider.getContentLocation(//
+        Path inputRoot = jarInput.file.toPath()
+        Path outputRoot = outputProvider.getContentLocation(//
             jarInput.name,
             jarInput.contentTypes,
             jarInput.scopes,
-            Format.JAR)
+            Format.JAR).toPath()
 
-        log.debug('input jar = ', inputJar.path)
-        log.debug('output jar = ', outputJar.path)
+        println """
+            INPUT: ${inputRoot.toString()} 
+            CHANGED: ${jarInput.status} 
+            OUTPUT: ${outputRoot.toString()} 
+            INCREMENTAL: ${invocation.isIncremental()}
+        """
 
         if (invocation.isIncremental()) {
 
-          status = jarInput.status
-
-          if (status != Status.NOTCHANGED) {
-            if (debounceExt.isLoggable()) println "changed jar = ${jarInput.name}:${status}"
-          }
-
-          switch (status) {
+          switch (jarInput.status) {
             case Status.NOTCHANGED:
               break
             case Status.ADDED:
             case Status.CHANGED:
-              Processor.transformJar(inputJar, outputJar, weavedClassesContainer)
+              FileUtils.delete(outputRoot)
+              Processor.processJarPath(inputRoot, outputRoot, weavedClassesContainer)
               break
             case Status.REMOVED:
-              FileUtils.delete(outputJar)
+              FileUtils.delete(outputRoot)
               break
           }
         } else {
-          Processor.transformJar(inputJar, outputJar, weavedClassesContainer)
+          Processor.processJarPath(inputRoot, outputRoot, weavedClassesContainer)
         }
       }
 
       /**/
       inputs.directoryInputs.each { directoryInput ->
 
-        File inputDir = directoryInput.file
-        File outputDir = outputProvider.getContentLocation(//
+        Path inputRoot = directoryInput.file.toPath()
+        Path outputRoot = outputProvider.getContentLocation(//
             directoryInput.name,
             directoryInput.contentTypes,
             directoryInput.scopes,
-            Format.DIRECTORY)
+            Format.DIRECTORY).toPath()
 
-        log.debug('input directory = ', inputDir.path)
-        log.debug('output directory = ', outputDir.path)
+        println """
+            INPUT: ${inputRoot.toString()} 
+            CHANGED: ${directoryInput.changedFiles.size()} 
+            OUTPUT: ${outputRoot.toString()} 
+            INCREMENTAL: ${invocation.isIncremental()}
+        """
 
         if (invocation.isIncremental()) {
           directoryInput.changedFiles.each { File inputFile, Status status ->
 
-            if (debounceExt.loggable) println "changed file = ${inputFile.name}:${status}"
+            Path inputPath = inputFile.toPath()
+            Path outputPath = Utils.toOutputPath(outputRoot, inputRoot, inputPath)
+
+            if (debounceExt.loggable) println "changed: ${inputFile.name}:${status}"
 
             switch (status) {
               case Status.NOTCHANGED:
                 break
               case Status.ADDED:
               case Status.CHANGED:
-                if (!inputFile.isDirectory() && Utils.isMatchCondition(inputFile.name)) {
-                  File outputFile = Utils.toOutputFile(outputDir, inputDir, inputFile)
-                  Processor.transformFile(inputFile, outputFile, weavedClassesContainer)
-                }
+                //direct process byte code
+                Processor.processBytecode(inputPath, outputPath, weavedClassesContainer)
                 break
               case Status.REMOVED:
-                File outputFile = Utils.toOutputFile(outputDir, inputDir, inputFile)
-                FileUtils.deleteIfExists(outputFile)
+                Files.delete(outputPath)
                 break
             }
           }
         } else {
-          for (File inputFile : FileUtils.getAllFiles(inputDir)) {
-            if (Utils.isMatchCondition(inputFile.name)) {
-              File outputFile = Utils.toOutputFile(outputDir, inputDir, inputFile)
-              Processor.transformFile(inputFile, outputFile, weavedClassesContainer)
-            }
-          }
+          Processor.processFilePath(inputRoot, outputRoot, weavedClassesContainer)
         }
       }
     }

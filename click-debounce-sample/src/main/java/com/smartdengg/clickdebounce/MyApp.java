@@ -12,6 +12,5 @@ public class MyApp extends Application {
   @Override public void onCreate() {
     super.onCreate();
     DebouncedPredictor.FROZEN_WINDOW_MILLIS = 300;
-    DebouncedPredictor.FROZEN_WINDOW_MILLIS = 300;
   }
 }
