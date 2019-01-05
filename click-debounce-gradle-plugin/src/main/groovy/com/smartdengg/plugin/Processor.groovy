@@ -105,7 +105,7 @@ class Processor {
     ClassReader classReader = new ClassReader(bytes)
     PreCheckVisitorAdapter preCheckVisitorAdapter = new PreCheckVisitorAdapter()
     try {
-      classReader.accept(preCheckVisitorAdapter, ClassReader.EXPAND_FRAMES)
+      classReader.accept(preCheckVisitorAdapter, ClassReader.SKIP_FRAMES)
     } catch (Exception e) {
       println "Exception occurred when visit code \n " + e.printStackTrace()
     }
