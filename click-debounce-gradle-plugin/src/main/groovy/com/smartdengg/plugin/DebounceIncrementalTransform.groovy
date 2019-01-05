@@ -3,26 +3,41 @@ package com.smartdengg.plugin
 import com.android.annotations.NonNull
 import com.android.build.api.transform.*
 import com.android.build.gradle.internal.pipeline.TransformManager
-import com.android.utils.FileUtils
+import com.google.common.base.Joiner
+import com.google.common.collect.ImmutableList
 import com.smartdengg.compile.WeavedClass
 import groovy.util.logging.Slf4j
+import org.apache.commons.io.FileUtils
+import org.gradle.api.Project
+import proguard.util.PrintWriterUtil
 
 import java.nio.file.Files
 import java.nio.file.Path
 
+import static com.android.builder.model.AndroidProject.FD_OUTPUTS
 import static com.google.common.base.Preconditions.checkNotNull
 
 @Slf4j
 class DebounceIncrementalTransform extends Transform {
 
+  Project project
   DebounceExtension debounceExt
   Map<String, List<WeavedClass>> weavedVariantClassesMap
   def isApp
+  private final File debounceOutDir
 
-  DebounceIncrementalTransform(debounceExt, weavedVariantClassesMap, isApp) {
-    this.debounceExt = debounceExt
+  DebounceIncrementalTransform(Project project,
+      Map<String, List<WeavedClass>> weavedVariantClassesMap, boolean isApp) {
+    this.project = project
+    this.debounceExt = project."${DebounceExtension.NAME}"
     this.weavedVariantClassesMap = weavedVariantClassesMap
     this.isApp = isApp
+
+    debounceOutDir = new File(Joiner.on(File.separatorChar).join(
+        project.buildDir,
+        FD_OUTPUTS,
+        'debounce',
+        'mapping'))
   }
 
   @NonNull
@@ -50,6 +65,11 @@ class DebounceIncrementalTransform extends Transform {
   }
 
   @Override
+  Collection<File> getSecondaryFileOutputs() {
+    return ImmutableList.of(debounceOutDir)
+  }
+
+  @Override
   void transform(TransformInvocation invocation)
       throws TransformException, InterruptedException, IOException {
 
@@ -57,89 +77,98 @@ class DebounceIncrementalTransform extends Transform {
     weavedVariantClassesMap[invocation.context.variantName] = weavedClassesContainer
 
     TransformOutputProvider outputProvider = checkNotNull(invocation.getOutputProvider(),
-        "Missing output object for processJarPath " + getName())
+        "Missing output object for run " + getName())
     if (!invocation.isIncremental()) outputProvider.deleteAll()
 
-    invocation.inputs.each { inputs ->
+    File incrementalRecorder = new File(debounceOutDir,
+        Joiner.on(File.separatorChar).join(invocation.context.variantName, 'changed-status.txt'))
+    FileUtils.touch(incrementalRecorder)
+    PrintWriter writer = PrintWriterUtil.createPrintWriterOut(incrementalRecorder)
 
-      /**/
-      inputs.jarInputs.each { jarInput ->
+    try {
 
-        Path inputRoot = jarInput.file.toPath()
-        Path outputRoot = outputProvider.getContentLocation(//
-            jarInput.name,
-            jarInput.contentTypes,
-            jarInput.scopes,
-            Format.JAR).toPath()
+      invocation.inputs.each { inputs ->
 
-        println """
-            INPUT: ${inputRoot.toString()} 
-            CHANGED: ${jarInput.status} 
-            OUTPUT: ${outputRoot.toString()} 
-            INCREMENTAL: ${invocation.isIncremental()}
-        """
+        /**/
+        inputs.jarInputs.each { jarInput ->
 
-        if (invocation.isIncremental()) {
+          Path inputPath = jarInput.file.toPath()
+          Path outputPtah = outputProvider.getContentLocation(//
+              jarInput.name,
+              jarInput.contentTypes,
+              jarInput.scopes,
+              Format.JAR).toPath()
 
-          switch (jarInput.status) {
-            case Status.NOTCHANGED:
-              break
-            case Status.ADDED:
-            case Status.CHANGED:
-              FileUtils.delete(outputRoot)
-              Processor.processJarPath(inputRoot, outputRoot, weavedClassesContainer)
-              break
-            case Status.REMOVED:
-              FileUtils.delete(outputRoot)
-              break
-          }
-        } else {
-          Processor.processJarPath(inputRoot, outputRoot, weavedClassesContainer)
-        }
-      }
+          writer.println "INPUT: ${inputPath.toString()}"
+          writer.println "CHANGED: ${jarInput.status} "
+          writer.println "OUTPUT: ${outputPtah.toString()} "
+          writer.println "INCREMENTAL: ${invocation.isIncremental()}"
+          writer.println()
 
-      /**/
-      inputs.directoryInputs.each { directoryInput ->
+          if (invocation.isIncremental()) {
 
-        Path inputRoot = directoryInput.file.toPath()
-        Path outputRoot = outputProvider.getContentLocation(//
-            directoryInput.name,
-            directoryInput.contentTypes,
-            directoryInput.scopes,
-            Format.DIRECTORY).toPath()
-
-        println """
-            INPUT: ${inputRoot.toString()} 
-            CHANGED: ${directoryInput.changedFiles.size()} 
-            OUTPUT: ${outputRoot.toString()} 
-            INCREMENTAL: ${invocation.isIncremental()}
-        """
-
-        if (invocation.isIncremental()) {
-          directoryInput.changedFiles.each { File inputFile, Status status ->
-
-            Path inputPath = inputFile.toPath()
-            Path outputPath = Utils.toOutputPath(outputRoot, inputRoot, inputPath)
-
-            if (debounceExt.loggable) println "changed: ${inputFile.name}:${status}"
-
-            switch (status) {
+            switch (jarInput.status) {
               case Status.NOTCHANGED:
                 break
               case Status.ADDED:
               case Status.CHANGED:
-                //direct process byte code
-                Processor.processBytecode(inputPath, outputPath, weavedClassesContainer)
+                Files.deleteIfExists(outputPtah)
+                Processor.run(inputPath, outputPtah, weavedClassesContainer, Processor.FileType.JAR)
                 break
               case Status.REMOVED:
-                Files.delete(outputPath)
+                Files.deleteIfExists(outputPtah)
                 break
             }
+          } else {
+            Processor.run(inputPath, outputPtah, weavedClassesContainer, Processor.FileType.JAR)
           }
-        } else {
-          Processor.processFilePath(inputRoot, outputRoot, weavedClassesContainer)
+        }
+
+        /**/
+        inputs.directoryInputs.each { directoryInput ->
+
+          Path inputRoot = directoryInput.file.toPath()
+          Path outputRoot = outputProvider.getContentLocation(//
+              directoryInput.name,
+              directoryInput.contentTypes,
+              directoryInput.scopes,
+              Format.DIRECTORY).toPath()
+
+          writer.println "INPUT: ${inputRoot.toString()} "
+          writer.println "CHANGED: ${directoryInput.changedFiles.size()} "
+          writer.println "OUTPUT: ${outputRoot.toString()} "
+          writer.println "INCREMENTAL: ${invocation.isIncremental()}"
+          writer.println()
+
+          if (invocation.isIncremental()) {
+            directoryInput.changedFiles.each { File inputFile, Status status ->
+
+              Path inputPath = inputFile.toPath()
+              Path outputPath = Utils.toOutputPath(outputRoot, inputRoot, inputPath)
+
+              if (debounceExt.loggable) println "outOfDate: ${inputFile.name}:${status}"
+
+              switch (status) {
+                case Status.NOTCHANGED:
+                  break
+                case Status.ADDED:
+                case Status.CHANGED:
+                  //direct run byte code
+                  Processor.directRun(inputPath, outputPath, weavedClassesContainer)
+                  break
+                case Status.REMOVED:
+                  Files.deleteIfExists(outputPath)
+                  break
+              }
+            }
+          } else {
+            Processor.run(inputRoot, outputRoot, weavedClassesContainer, Processor.FileType.FILE)
+          }
         }
       }
+    } finally {
+      PrintWriterUtil.closePrintWriter(incrementalRecorder, writer)
+      println "Printing files status to [" + PrintWriterUtil.fileName(incrementalRecorder) + "]"
     }
   }
 }

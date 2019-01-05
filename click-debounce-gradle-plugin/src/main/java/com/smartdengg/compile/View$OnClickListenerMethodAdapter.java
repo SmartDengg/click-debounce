@@ -21,7 +21,7 @@ class View$OnClickListenerMethodAdapter extends MethodVisitor {
   private boolean weaved;
 
   View$OnClickListenerMethodAdapter(MethodVisitor methodVisitor) {
-    super(Opcodes.ASM5, methodVisitor);
+    super(Opcodes.ASM6, methodVisitor);
   }
 
   @Override public void visitCode() {

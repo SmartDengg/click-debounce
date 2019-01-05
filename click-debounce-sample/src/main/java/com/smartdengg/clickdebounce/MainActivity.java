@@ -10,7 +10,8 @@ import android.widget.EditText;
 public class MainActivity extends Activity
     implements View.OnClickListener, AdapterView.OnItemClickListener {
 
-  @Override protected void onCreate(Bundle savedInstanceState) {
+  @Override
+  protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
     findViewById(R.id.button).setOnClickListener(this);
@@ -18,7 +19,8 @@ public class MainActivity extends Activity
     new AndroidClass().onClick(new EditText(this));
   }
 
-  @Override public void onClick(View v) {
+  @Override
+  public void onClick(View v) {
     startActivity(new Intent(MainActivity.this, SecondActivity.class));
   }
 

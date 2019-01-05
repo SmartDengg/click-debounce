@@ -21,7 +21,7 @@ class ListView$OnItemClickListenerMethodAdapter extends MethodVisitor {
   private boolean weaved;
 
   ListView$OnItemClickListenerMethodAdapter(MethodVisitor methodVisitor) {
-    super(Opcodes.ASM5, methodVisitor);
+    super(Opcodes.ASM6, methodVisitor);
   }
 
   @Override public void visitCode() {

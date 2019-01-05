@@ -23,6 +23,6 @@ dependencies {
   compile localGroovy()
   implementation "com.android.tools.build:gradle:$androidPluginVersion"
   implementation 'commons-io:commons-io:2.6'
-  implementation 'org.ow2.asm:asm:6.0'
+  implementation 'org.ow2.asm:asm:7.0'
   implementation 'org.ow2.asm:asm-commons:6.0'
 }

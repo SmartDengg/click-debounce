@@ -28,6 +28,18 @@ class Utils implements Opcodes {
     return (access & ACC_STATIC) != 0;
   }
 
+  static boolean isViewOnclickMethod(int access, String name, String desc) {
+    return (Utils.isPublic(access) && !Utils.isStatic(access)) && //
+        name.equals("onClick") && //
+        desc.equals("(Landroid/view/View;)V");
+  }
+
+  static boolean isListViewOnItemOnclickMethod(int access, String name, String desc) {
+    return (Utils.isPublic(access) && !Utils.isStatic(access)) && //
+        name.equals("onItemClick") && //
+        desc.equals("(Landroid/widget/AdapterView;Landroid/view/View;IJ)V");
+  }
+
   static void addDebouncedAnno(MethodVisitor mv) {
     AnnotationVisitor annotationVisitor =
         mv.visitAnnotation("Lcom/smartdengg/clickdebounce/Debounced;", false);

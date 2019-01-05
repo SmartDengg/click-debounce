@@ -69,6 +69,14 @@ debounce.loggable = true
 
 ```
 
+**Step 4 (Optional)**. Set the debounce window time(default is 300 milliseconds):
+
+```java
+
+DebouncedPredictor.FROZEN_WINDOW_MILLIS = 400L
+
+```
+
 
 ## How it works
 

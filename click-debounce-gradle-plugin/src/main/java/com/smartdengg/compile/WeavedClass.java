@@ -12,23 +12,15 @@ import java.util.Set;
 public class WeavedClass implements Serializable {
   private static final long serialVersionUID = 211794679952616432L;
 
-  private String className;
-  private Set<String> debouncedMethods = new LinkedHashSet<>();
+  public String className;
+  public Set<String> debouncedMethods = new LinkedHashSet<>();
 
-  WeavedClass(String className) {
+  public WeavedClass(String className) {
     this.className = className;
   }
 
-  void addDebouncedMethod(String methodSignature) {
+  public void addDebouncedMethod(String methodSignature) {
     debouncedMethods.add(methodSignature);
-  }
-
-  public String getClassName() {
-    return className;
-  }
-
-  public Set<String> getDebouncedMethods() {
-    return debouncedMethods;
   }
 
   public boolean hasDebouncedMethod() {

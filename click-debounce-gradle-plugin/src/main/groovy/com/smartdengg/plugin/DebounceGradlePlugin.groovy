@@ -46,8 +46,8 @@ class DebounceGradlePlugin implements Plugin<Project> {
     def weavedVariantClassesMap = new LinkedHashMap<String, List<WeavedClass>>()
 
     extension.registerTransform(
-        new DebounceIncrementalTransform(project."${DebounceExtension.NAME}",
-            weavedVariantClassesMap, androidPlugin instanceof AppPlugin))
+        new DebounceIncrementalTransform(project, weavedVariantClassesMap,
+            androidPlugin instanceof AppPlugin))
 
     project.afterEvaluate {
 
@@ -81,7 +81,7 @@ class DebounceGradlePlugin implements Plugin<Project> {
       variantName = variant.name
       outputMappingFile =
           FileUtils.join(project.buildDir, AndroidProject.FD_OUTPUTS, 'debounce', 'mapping',
-              variant.name, 'debouncedMapping.xml')
+              variant.name, 'classes.txt')
     }
 
     debounceTask.finalizedBy(outputMappingTask)
