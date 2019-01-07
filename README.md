@@ -13,7 +13,6 @@ I also wrote a **[blog](https://www.jianshu.com/p/28751130c038)** to share my id
 
 *Note: This repository is just a gradle plugin, responsible for bytecode weaving work, Android runtime library please move [here](https://github.com/SmartDengg/asm-clickdebounce-runtime).*
 
-
 ## Requirements
 
 - JDK 1.7 +
@@ -76,6 +75,37 @@ debounce.loggable = true
 DebouncedPredictor.FROZEN_WINDOW_MILLIS = 400L
 
 ```
+
+## Artifact
+
+We output some log files to help developers better understand the build information.
+These file path is located in **buildDir/outputs/debounce/logs/<variant>/**, as follows:
+
+
+```
+.
++-- app(Apply this AGP)
+|   +-- build
+|       +-- generated
+|       +-- intermediates
+|       +-- outputs
+|           +-- debounce
+|               +-- logs
+|                   +-- debug
+|                       +-- files.txt
+|                       +-- classes.txt
++-- build.gradle
++-- gradle.properties
++-- gradlew
++-- gradlew.bat
++-- settings.gradle
+
+```
+
+- **files.txt** ：Record the class files consumed by this build，it can help you better understand the incremental build
+- **classes.txt** ：Record information about the classes and methods weaved in this build
+
+
 
 
 ## How it works

@@ -37,12 +37,9 @@ class DebounceGradlePlugin implements Plugin<Project> {
     //        project.dependencies.create(project.rootProject.findProject("click-debounce-runtime")))
 
     project.configurations.implementation.dependencies.add(
-        project.dependencies.create('com.github.SmartDengg:asm-clickdebounce-runtime:1.0.0'))
-
+        project.dependencies.create('com.github.SmartDengg:asm-clickdebounce-runtime:1.1.0'))
     project.extensions["${DebounceExtension.NAME}"] = project.objects.newInstance(DebounceExtension)
-
     def extension = project.extensions.getByName("android") as BaseExtension
-
     def weavedVariantClassesMap = new LinkedHashMap<String, List<WeavedClass>>()
 
     extension.registerTransform(
@@ -50,9 +47,7 @@ class DebounceGradlePlugin implements Plugin<Project> {
             androidPlugin instanceof AppPlugin))
 
     project.afterEvaluate {
-
       Utils.forExtension(extension) { variant ->
-
         createWriteMappingTask(project, variant, weavedVariantClassesMap)
       }
     }
@@ -80,7 +75,7 @@ class DebounceGradlePlugin implements Plugin<Project> {
       classes = weavedVariantClassesMap
       variantName = variant.name
       outputMappingFile =
-          FileUtils.join(project.buildDir, AndroidProject.FD_OUTPUTS, 'debounce', 'mapping',
+          FileUtils.join(project.buildDir, AndroidProject.FD_OUTPUTS, 'debounce', 'logs',
               variant.name, 'classes.txt')
     }
 

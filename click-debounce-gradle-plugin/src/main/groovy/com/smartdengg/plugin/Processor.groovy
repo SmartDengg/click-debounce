@@ -3,7 +3,6 @@ package com.smartdengg.plugin
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.Iterables
 import com.smartdengg.compile.*
-import com.smartdengg.plugin.Utils
 import groovy.transform.PackageScope
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassWriter
@@ -39,10 +38,10 @@ class Processor {
     URI inputUri = URI.create("jar:file:$input")
     URI outputUri = URI.create("jar:file:$output")
 
-    FileSystems.newFileSystem(inputUri, env).withCloseable { inputZFS ->
-      FileSystems.newFileSystem(outputUri, env).withCloseable { outputZFS ->
-        Path inputRoot = Iterables.getOnlyElement(inputZFS.rootDirectories)
-        Path outputRoot = Iterables.getOnlyElement(outputZFS.rootDirectories)
+    FileSystems.newFileSystem(inputUri, env).withCloseable { inputFileSystem ->
+      FileSystems.newFileSystem(outputUri, env).withCloseable { outputFileSystem ->
+        Path inputRoot = Iterables.getOnlyElement(inputFileSystem.rootDirectories)
+        Path outputRoot = Iterables.getOnlyElement(outputFileSystem.rootDirectories)
         processFile(inputRoot, outputRoot, weavedClasses)
       }
     }
@@ -78,26 +77,26 @@ class Processor {
     }
   }
 
-  private static byte[] visitAndReturnBytecode(byte[] bytes, List<WeavedClass> weavedClasses) {
+  private static byte[] visitAndReturnBytecode(byte[] originBytes,
+      List<WeavedClass> weavedClasses) {
 
-    def weavedBytes = bytes
-
-    ClassReader classReader = new ClassReader(bytes)
+    ClassReader classReader = new ClassReader(originBytes)
     ClassWriter classWriter =
         new CompactClassWriter(classReader,
             ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS)
 
-    Map<String, List<MethodDelegate>> map = preCheckAndRetrieve(bytes)
+    Map<String, List<MethodDelegate>> map = preCheckAndRetrieve(originBytes)
     DebounceModifyClassAdapter classAdapter = new DebounceModifyClassAdapter(classWriter, map)
     try {
       classReader.accept(classAdapter, ClassReader.EXPAND_FRAMES)
-      weavedBytes = classWriter.toByteArray()
-      weavedClasses.add(classAdapter.getWeavedClass())
+      //move to visit end?
+      weavedClasses.add(classAdapter.getWovenClass())
+      return classWriter.toByteArray()
     } catch (Exception e) {
       println "Exception occurred when visit code \n " + e.printStackTrace()
     }
 
-    return weavedBytes
+    return originBytes
   }
 
   private static Map<String, List<MethodDelegate>> preCheckAndRetrieve(byte[] bytes) {

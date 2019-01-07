@@ -11,6 +11,7 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.incremental.IncrementalTaskInputs
 import proguard.util.PrintWriterUtil
 
 class OutputMappingTask extends DefaultTask {
@@ -30,11 +31,33 @@ class OutputMappingTask extends DefaultTask {
   Property<Map> classes = project.objects.property(Map.class)
 
   @TaskAction
-  void wrireMapping() {
+  void wrireMapping(IncrementalTaskInputs inputs) {
 
     boolean loggable = (project.extensions["$DebounceExtension.NAME"] as DebounceExtension).loggable
     def mappingFile = outputMappingFile.get().asFile
     List<WeavedClass> weavedClasses = (List<WeavedClass>) classes.get()[variantName.get()]
+
+    inputs.outOfDate { change ->
+      if (change.file.directory) return
+      if (loggable && Utils.isMatchCondition(change.file.name)) {
+        String state
+        if (change.added) {
+          state = 'ADDED'
+        } else if (change.modified) {
+          state = 'MODIFIED'
+        } else {
+          state = 'FIRST RUN'
+        }
+        println "OUT OF DATE: ${change.file.name}:$state"
+      }
+    }
+
+    inputs.removed { change ->
+      if (change.file.directory) return
+      if (loggable && Utils.isMatchCondition(change.file.name)) {
+        println "REMOVED: ${change.file.name}"
+      }
+    }
 
     FileUtils.touch(mappingFile)
     Files.asCharSink(mappingFile, Charsets.UTF_8).write("")
@@ -46,6 +69,7 @@ class OutputMappingTask extends DefaultTask {
       }.each { weavedClass ->
         writer.println "${weavedClass.className}:"
         weavedClass.debouncedMethods.each { method ->
+          if (loggable) println "ADD $weavedClass.className : $method"
           writer.println "\t -> $method"
         }
       }

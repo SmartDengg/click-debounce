@@ -16,20 +16,20 @@ import static com.smartdengg.compile.Utils.convertSignature;
 public class DebounceModifyClassAdapter extends ClassVisitor implements Opcodes {
 
   private String className;
-  private WeavedClass weavedClass;
-  private Map<String, List<MethodDelegate>> unWeavedClassMap;
+  private WeavedClass WeavedClass;
+  private Map<String, List<MethodDelegate>> unWovenClassMap;
 
   public DebounceModifyClassAdapter(ClassVisitor classVisitor,
-      Map<String, List<MethodDelegate>> unWeavedClassMap) {
+      Map<String, List<MethodDelegate>> unWovenClassMap) {
     super(Opcodes.ASM6, classVisitor);
-    this.unWeavedClassMap = unWeavedClassMap;
+    this.unWovenClassMap = unWovenClassMap;
   }
 
   @Override
   public void visit(int version, int access, String name, String signature, String superName,
       String[] interfaces) {
     super.visit(version, access, name, signature, superName, interfaces);
-    this.weavedClass = new WeavedClass(className = name);
+    this.WeavedClass = new WeavedClass(className = name);
   }
 
   @Override
@@ -41,27 +41,27 @@ public class DebounceModifyClassAdapter extends ClassVisitor implements Opcodes 
     // android.view.View.OnClickListener.onClick(android.view.View)
     if (Utils.isViewOnclickMethod(access, name, desc) && isHit(access, name, desc)) {
       methodVisitor = new View$OnClickListenerMethodAdapter(methodVisitor);
-      weavedClass.addDebouncedMethod(convertSignature(name, desc));
+      WeavedClass.addDebouncedMethod(convertSignature(name, desc));
     }
 
     // android.widget.AdapterView.OnItemClickListener.onItemClick(android.widget.AdapterView,android.view.View,int,long)
     if (Utils.isListViewOnItemOnclickMethod(access, name, desc) && isHit(access, name, desc)) {
       methodVisitor = new ListView$OnItemClickListenerMethodAdapter(methodVisitor);
-      weavedClass.addDebouncedMethod(convertSignature(name, desc));
+      WeavedClass.addDebouncedMethod(convertSignature(name, desc));
     }
 
     return methodVisitor;
   }
 
   private boolean isHit(int access, String name, String desc) {
-    if (unWeavedClassMap == null || unWeavedClassMap.size() == 0) return false;
-    boolean hitClass = unWeavedClassMap.containsKey(className);
+    if (unWovenClassMap == null || unWovenClassMap.size() == 0) return false;
+    boolean hitClass = unWovenClassMap.containsKey(className);
     if (hitClass) {
-      List<MethodDelegate> methodDelegates = unWeavedClassMap.get(weavedClass.className);
+      List<MethodDelegate> methodDelegates = unWovenClassMap.get(WeavedClass.className);
       for (int i = 0, n = methodDelegates.size(); i < n; i++) {
         boolean hitMethod = methodDelegates.get(i).match(access, name, desc);
         if (hitMethod) {
-          unWeavedClassMap.remove(className);
+          unWovenClassMap.remove(className);
           return true;
         }
       }
@@ -69,7 +69,7 @@ public class DebounceModifyClassAdapter extends ClassVisitor implements Opcodes 
     return false;
   }
 
-  public WeavedClass getWeavedClass() {
-    return weavedClass;
+  public WeavedClass getWovenClass() {
+    return WeavedClass;
   }
 }

@@ -41,5 +41,5 @@ dependencies {
   implementation project(':click-debounce-lib-android')
   implementation 'commons-io:commons-io:2.6'
   implementation 'org.ow2.asm:asm:6.0'
-  implementation 'org.ow2.asm:asm-commons:6.0'
+//  implementation 'org.ow2.asm:asm-commons:6.0'
 }

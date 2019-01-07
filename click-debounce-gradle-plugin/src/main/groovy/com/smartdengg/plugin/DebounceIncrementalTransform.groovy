@@ -24,7 +24,7 @@ class DebounceIncrementalTransform extends Transform {
   DebounceExtension debounceExt
   Map<String, List<WeavedClass>> weavedVariantClassesMap
   def isApp
-  private final File debounceOutDir
+  File debounceOutDir
 
   DebounceIncrementalTransform(Project project,
       Map<String, List<WeavedClass>> weavedVariantClassesMap, boolean isApp) {
@@ -32,12 +32,11 @@ class DebounceIncrementalTransform extends Transform {
     this.debounceExt = project."${DebounceExtension.NAME}"
     this.weavedVariantClassesMap = weavedVariantClassesMap
     this.isApp = isApp
-
-    debounceOutDir = new File(Joiner.on(File.separatorChar).join(
+    this.debounceOutDir = new File(Joiner.on(File.separatorChar).join(
         project.buildDir,
         FD_OUTPUTS,
         'debounce',
-        'mapping'))
+        'logs'))
   }
 
   @NonNull
@@ -61,11 +60,11 @@ class DebounceIncrementalTransform extends Transform {
 
   @Override
   boolean isIncremental() {
-    return true
+    return false
   }
 
   @Override
-  Collection<File> getSecondaryFileOutputs() {
+  Collection<File> getSecondaryDirectoryOutputs() {
     return ImmutableList.of(debounceOutDir)
   }
 
@@ -80,16 +79,13 @@ class DebounceIncrementalTransform extends Transform {
         "Missing output object for run " + getName())
     if (!invocation.isIncremental()) outputProvider.deleteAll()
 
-    File incrementalRecorder = new File(debounceOutDir,
-        Joiner.on(File.separatorChar).join(invocation.context.variantName, 'changed-status.txt'))
-    FileUtils.touch(incrementalRecorder)
-    PrintWriter writer = PrintWriterUtil.createPrintWriterOut(incrementalRecorder)
+    File changedFiles = new File(debounceOutDir,
+        Joiner.on(File.separatorChar).join(invocation.context.variantName, 'files.txt'))
+    FileUtils.touch(changedFiles)
+    PrintWriter writer = PrintWriterUtil.createPrintWriterOut(changedFiles)
 
     try {
-
       invocation.inputs.each { inputs ->
-
-        /**/
         inputs.jarInputs.each { jarInput ->
 
           Path inputPath = jarInput.file.toPath()
@@ -99,11 +95,13 @@ class DebounceIncrementalTransform extends Transform {
               jarInput.scopes,
               Format.JAR).toPath()
 
+          /** *************************************************************/
           writer.println "INPUT: ${inputPath.toString()}"
           writer.println "CHANGED: ${jarInput.status} "
           writer.println "OUTPUT: ${outputPtah.toString()} "
           writer.println "INCREMENTAL: ${invocation.isIncremental()}"
           writer.println()
+          /** *************************************************************/
 
           if (invocation.isIncremental()) {
 
@@ -124,7 +122,6 @@ class DebounceIncrementalTransform extends Transform {
           }
         }
 
-        /**/
         inputs.directoryInputs.each { directoryInput ->
 
           Path inputRoot = directoryInput.file.toPath()
@@ -134,19 +131,19 @@ class DebounceIncrementalTransform extends Transform {
               directoryInput.scopes,
               Format.DIRECTORY).toPath()
 
+          /** *************************************************************/
           writer.println "INPUT: ${inputRoot.toString()} "
           writer.println "CHANGED: ${directoryInput.changedFiles.size()} "
           writer.println "OUTPUT: ${outputRoot.toString()} "
           writer.println "INCREMENTAL: ${invocation.isIncremental()}"
           writer.println()
+          /** *************************************************************/
 
           if (invocation.isIncremental()) {
             directoryInput.changedFiles.each { File inputFile, Status status ->
 
               Path inputPath = inputFile.toPath()
               Path outputPath = Utils.toOutputPath(outputRoot, inputRoot, inputPath)
-
-              if (debounceExt.loggable) println "outOfDate: ${inputFile.name}:${status}"
 
               switch (status) {
                 case Status.NOTCHANGED:
@@ -167,8 +164,8 @@ class DebounceIncrementalTransform extends Transform {
         }
       }
     } finally {
-      PrintWriterUtil.closePrintWriter(incrementalRecorder, writer)
-      println "Printing files status to [" + PrintWriterUtil.fileName(incrementalRecorder) + "]"
+      PrintWriterUtil.closePrintWriter(changedFiles, writer)
+      println "Printing files status to [" + PrintWriterUtil.fileName(changedFiles) + "]"
     }
   }
 }
