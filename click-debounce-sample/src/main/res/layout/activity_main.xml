@@ -8,12 +8,21 @@
   tools:context="com.smartdengg.clickdebounce.MainActivity">
 
   <Button
-    android:id="@+id/button"
+    android:id="@+id/button1"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:layout_margin="10dp"
-    android:background="@android:color/holo_red_light"
+    android:background="@android:color/holo_blue_bright"
     android:padding="20dp"
-    android:text="navigate" />
+    android:text="button1" />
+
+  <Button
+    android:id="@+id/button2"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_margin="10dp"
+    android:background="@android:color/holo_orange_light"
+    android:padding="20dp"
+    android:text="button2" />
 
 </LinearLayout>
