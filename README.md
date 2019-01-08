@@ -42,7 +42,7 @@ buildscript {
     }
     dependencies {
         ...
-        classpath 'com.github.SmartDengg.asm-clickdebounce:click-debounce-gradle-plugin:1.0.0'
+        classpath 'com.github.SmartDengg.asm-clickdebounce:click-debounce-gradle-plugin:1.1.2'
     }
 }
 
