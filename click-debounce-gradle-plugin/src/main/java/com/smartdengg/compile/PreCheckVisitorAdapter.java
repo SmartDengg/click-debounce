@@ -32,14 +32,13 @@ public class PreCheckVisitorAdapter extends ClassVisitor implements Opcodes {
     this.className = name;
   }
 
-  @Override
-  public MethodVisitor visitMethod(int access, String name, String desc, String signature,
+  @Override public MethodVisitor visitMethod(int access, String name, String desc, String signature,
       String[] exceptions) {
 
     if (Utils.isViewOnclickMethod(access, name, desc) || Utils.isListViewOnItemOnclickMethod(access,
         name, desc)) {
-      return new MethodNodeAdapter(api, access, name, desc, signature, exceptions,
-          className, unWeavedClassMap);
+      return new MethodNodeAdapter(api, access, name, desc, signature, exceptions, className,
+          unWeavedClassMap);
     }
 
     return super.visitMethod(access, name, desc, signature, exceptions);
@@ -54,23 +53,14 @@ public class PreCheckVisitorAdapter extends ClassVisitor implements Opcodes {
     private String className;
     private Map<String, List<MethodDelegate>> map;
 
-    private int access;
-    private String name;
-    private String desc;
-
     MethodNodeAdapter(int api, int access, String name, String desc, String signature,
-        String[] exceptions, String className,
-        Map<String, List<MethodDelegate>> map) {
+        String[] exceptions, String className, Map<String, List<MethodDelegate>> map) {
       super(api, access, name, desc, signature, exceptions);
       this.className = className;
       this.map = map;
-      this.access = access;
-      this.name = name;
-      this.desc = desc;
     }
 
-    @Override
-    public void visitEnd() {
+    @Override public void visitEnd() {
       if (hasInvokeOperation()) {
         List<MethodDelegate> methodDelegates = map.get(className);
         if (methodDelegates == null) methodDelegates = new ArrayList<>();
