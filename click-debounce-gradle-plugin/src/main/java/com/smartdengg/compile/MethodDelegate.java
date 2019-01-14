@@ -19,7 +19,7 @@ public class MethodDelegate {
     this.desc = desc;
   }
 
-  public boolean match(int access, String name, String desc) {
+  boolean match(int access, String name, String desc) {
     return this.access == access &&
         Objects.equals(this.name, name) &&
         Objects.equals(this.desc, desc);
