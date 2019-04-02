@@ -14,14 +14,10 @@ repositories {
   google()
 }
 
-ext {
-  androidPluginVersion = '3.2.1'
-}
-
 dependencies {
   compile gradleApi()
   compile localGroovy()
-  implementation "com.android.tools.build:gradle:$androidPluginVersion"
+  implementation "com.android.tools.build:gradle:3.3.2"
   implementation 'commons-io:commons-io:2.6'
   implementation 'org.ow2.asm:asm:7.0'
   implementation 'org.ow2.asm:asm-commons:6.0'

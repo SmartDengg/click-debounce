@@ -32,8 +32,7 @@ class DebounceIncrementalTransform extends Transform {
     this.debounceExt = project."${DebounceExtension.NAME}"
     this.weavedVariantClassesMap = weavedVariantClassesMap
     this.isApp = isApp
-    this.debounceOutDir = new File(Joiner.on(File.separatorChar).join(
-        project.buildDir,
+    this.debounceOutDir = new File(Joiner.on(File.separatorChar).join(project.buildDir,
         FD_OUTPUTS,
         'debounce',
         'logs'))
@@ -165,7 +164,8 @@ class DebounceIncrementalTransform extends Transform {
       }
     } finally {
       PrintWriterUtil.closePrintWriter(changedFiles, writer)
-      println "Printing files status to [" + PrintWriterUtil.fileName(changedFiles) + "]"
+      ColoredLogger.logYellow(
+          "SUCCESS: Printing files status to [" + PrintWriterUtil.fileName(changedFiles) + "]")
     }
   }
 }

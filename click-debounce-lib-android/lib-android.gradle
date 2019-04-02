@@ -1,9 +1,7 @@
 apply plugin: 'com.android.library'
 apply plugin: 'smartdengg.clickdebounce'
 
-debounce {
-  loggable = true
-}
+debounce.loggable = true
 
 android {
   compileSdkVersion 26
