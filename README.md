@@ -5,13 +5,35 @@
 
 [![](https://jitpack.io/v/SmartDengg/asm-clickdebounce.svg)](https://jitpack.io/#SmartDengg/asm-clickdebounce)
 
-It is a gradle plugin that uses bytecode weaving technology to solve the click debounce problem of Android applications.
+### Support incremental compilation! Support parallel compilation! Faster compilation speed, and shorter compilation time.
 
-Safe, efficient, easy to use, support incremental build to avoid waste of build time.
+It is a gradle plugin that uses bytecode weaving technology to solve the click jitter problem of Android applications.
 
-I also wrote a **[blog](https://www.jianshu.com/p/28751130c038)** to share my ideas to solve the click debounce.
+For example, a normal `onClick` method without any debounce plan, multiple quick clicks may trigger multiple Activity starts:
 
-*Note: This repository is just a gradle plugin, responsible for bytecode weaving work, Android runtime library please move [here](https://github.com/SmartDengg/asm-clickdebounce-runtime).*
+```java
+  @Override public void onClick(View v) {
+    startActivity(new Intent(MainActivity.this, SecondActivity.class));
+  }
+```
+
+modify the bytecode at compile time to:
+
+```java
+  @Debounced
+  public void onClick(View var1) {
+    if (DebouncedPredictor.shouldDoClick(var1)) {
+      startActivity(new Intent(this, SecondActivity.class));
+    }
+  }
+```
+
+ The `@Debounced` annotation indicates that the method has been debounced. The `shouldDoClick(View)` method will determine which are the jitters and which are the correct clicks.
+
+I also wrote a **[BLOG](https://www.jianshu.com/p/28751130c038)** to share my ideas to solve the click jitter.
+
+*Note: This repository is just a gradle plugin, responsible for bytecode weaving work. Android runtime library please move [here](https://github.com/SmartDengg/asm-clickdebounce-runtime).*
+
 
 ## Requirements
 
@@ -50,7 +72,7 @@ buildscript {
 
 **Step 2**. Apply it in your module:
 
-*It supports 'com.android.application', 'com.android.library' and 'com.android.feature'*.
+Supports 'com.android.application', 'com.android.library' and 'com.android.feature'.
 
 ```groovy
 
@@ -59,16 +81,24 @@ apply plugin: 'smartdengg.clickdebounce'
 
 ```
 
+**Step 3 (Optional)**. By adding the following code to your `build.gradle` to enable printe the beautiful log or add an exclusive list to indicate which methods do not need to be debounced. By default, the log is not printed, and process all the methods in the [support](#jump) list.
 
-**Step 3 (Optional)**. Enable logging by adding the following code to your build.gradle:
+**It is not recommended to manually add @Debounce annotations to methods, you should use the exclusive feature.**
 
 ```groovy
 
-debounce.loggable = true
+debounce {
+  // logable
+  loggable = true
+  // asm description [class: [methods]]
+  exclusion = ["com/smartdengg/clickdebounce/ClickProxy": ['onClick(Landroid/view/View;)V',
+                                                           'onItemClick(Landroid/widget/AdapterView;Landroid/view/View;IJ)V']]
+}
 
 ```
 
-**Step 4 (Optional)**. Set the debounce window time(default is 300 milliseconds):
+
+**Step 4 (Optional)**. Set the debounce window time in your Java code(default is 300 milliseconds):
 
 ```java
 
@@ -84,7 +114,7 @@ These file path is located in **buildDir/outputs/debounce/logs/<variant>/**, as 
 
 ```
 .
-+-- app(Apply this AGP)
++-- app (apply this AGP)
 |   +-- build
 |       +-- generated
 |       +-- intermediates
@@ -102,10 +132,8 @@ These file path is located in **buildDir/outputs/debounce/logs/<variant>/**, as 
 
 ```
 
-- **files.txt** ：Record the class files consumed by this build，it can help you better understand the incremental build
-- **classes.txt** ：Record information about the classes and methods weaved in this build
-
-
+- **files.txt** ：Record the class files consumed by this build，it can help you better understand this build.
+- **classes.txt** ：Record information about the classes and methods weaved in this build.
 
 
 ## How it works
@@ -114,7 +142,7 @@ These file path is located in **buildDir/outputs/debounce/logs/<variant>/**, as 
 
 ![](art/clickdebounce.png)
 
-## Support
+## <span id="jump">Support</span>
 
 - [x] [View.OnClickListener](https://developer.android.com/reference/android/view/View.OnClickListener)
 - [x] [AdapterView.OnItemClickListener](https://developer.android.com/reference/android/widget/AdapterView.OnItemClickListener)
