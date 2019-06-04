@@ -8,6 +8,7 @@ import com.android.build.gradle.LibraryExtension
 import com.android.utils.FileUtils
 
 import java.nio.file.Path
+import java.util.concurrent.TimeUnit
 
 class Utils {
 
@@ -38,5 +39,22 @@ class Utils {
         extension.featureVariants.all(closure)
         break
     }
+  }
+
+  static Closure taskTimedConfigure = {
+    def startTime
+    doFirst { startTime = System.nanoTime() }
+    doLast {
+      ColoredLogger.logRed(
+          "====> COST: ${TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime)} ms")
+    }
+  }
+
+  static void writeStatusToFile(Writer writer, input, status, output, boolean incremental) {
+    writer.println "INPUT: ${input} "
+    writer.println "STATUS: ${status} "
+    writer.println "OUTPUT: ${output} "
+    writer.println "INCREMENTAL: ${incremental}"
+    writer.println()
   }
 }

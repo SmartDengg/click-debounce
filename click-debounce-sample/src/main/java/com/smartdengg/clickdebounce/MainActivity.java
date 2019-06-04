@@ -12,26 +12,28 @@ public class MainActivity extends Activity
 
   private static final String TAG = MainActivity.class.getSimpleName();
 
-  @Override
-  protected void onCreate(Bundle savedInstanceState) {
+  @Override protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
     findViewById(R.id.button1).setOnClickListener(this);
     findViewById(R.id.button2).setOnClickListener(new View.OnClickListener() {
-      @Override
-      public void onClick(View v) {
+      @Override public void onClick(View v) {
         Log.d(TAG, "onClick : " + this.getClass().getName());
+      }
+    });
+
+    findViewById(R.id.button3).setOnClickListener(new View.OnClickListener() {
+      @Override public void onClick(View v) {
+        ClickProxy.getInstance().onClick(v);
       }
     });
   }
 
-  @Override
-  public void onClick(View v) {
+  @Override public void onClick(View v) {
     startActivity(new Intent(MainActivity.this, SecondActivity.class));
   }
 
-  @Override
-  public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+  @Override public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
     Log.d(TAG, "onItemClick : " + this.getClass().getName());
   }
 }

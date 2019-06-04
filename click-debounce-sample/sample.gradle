@@ -1,7 +1,11 @@
 apply plugin: 'com.android.application'
 apply plugin: 'smartdengg.clickdebounce'
 
-debounce.loggable = true
+debounce {
+  loggable = true
+  exclusion = ["com/smartdengg/clickdebounce/ClickProxy": ['onClick(Landroid/view/View;)V',
+                                                           'onItemClick(Landroid/widget/AdapterView;Landroid/view/View;IJ)V']]
+}
 
 android {
   compileSdkVersion 26

@@ -3,6 +3,7 @@ package com.smartdengg.plugin
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.Iterables
 import com.smartdengg.compile.*
+import com.smartdengg.plugin.Utils
 import groovy.transform.PackageScope
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassWriter
@@ -18,21 +19,23 @@ class Processor {
   }
 
   @PackageScope static void run(Path input, Path output, List<WeavedClass> weavedClasses,
+      Map<String, List<String>> exclusion,
       FileType fileType) throws IOException {
 
     switch (fileType) {
 
       case FileType.JAR:
-        processJar(input, output, weavedClasses)
+        processJar(input, output, weavedClasses, exclusion)
         break
 
       case FileType.FILE:
-        processFile(input, output, weavedClasses)
+        processFile(input, output, weavedClasses, exclusion)
         break
     }
   }
 
-  private static void processJar(Path input, Path output, List<WeavedClass> weavedClasses) {
+  private static void processJar(Path input, Path output, List<WeavedClass> weavedClasses,
+      Map<String, List<String>> exclusion) {
 
     Map<String, String> env = ImmutableMap.of('create', 'true')
     URI inputUri = URI.create("jar:file:$input")
@@ -42,18 +45,19 @@ class Processor {
       FileSystems.newFileSystem(outputUri, env).withCloseable { outputFileSystem ->
         Path inputRoot = Iterables.getOnlyElement(inputFileSystem.rootDirectories)
         Path outputRoot = Iterables.getOnlyElement(outputFileSystem.rootDirectories)
-        processFile(inputRoot, outputRoot, weavedClasses)
+        processFile(inputRoot, outputRoot, weavedClasses, exclusion)
       }
     }
   }
 
-  private static void processFile(Path input, Path output, List<WeavedClass> weavedClasses) {
+  private static void processFile(Path input, Path output, List<WeavedClass> weavedClasses,
+      Map<String, List<String>> exclusion) {
 
     Files.walkFileTree(input, new SimpleFileVisitor<Path>() {
       @Override
       FileVisitResult visitFile(Path inputPath, BasicFileAttributes attrs) throws IOException {
         Path outputPath = Utils.toOutputPath(output, input, inputPath)
-        directRun(inputPath, outputPath, weavedClasses)
+        directRun(inputPath, outputPath, weavedClasses, exclusion)
         return FileVisitResult.CONTINUE
       }
 
@@ -67,10 +71,10 @@ class Processor {
   }
 
   @PackageScope static void directRun(Path input, Path output,
-      List<WeavedClass> weavedClasses) {
+      List<WeavedClass> weavedClasses, Map<String, List<String>> exclusion) {
     if (Utils.isMatchCondition(input.toString())) {
       byte[] inputBytes = Files.readAllBytes(input)
-      byte[] outputBytes = visitAndReturnBytecode(inputBytes, weavedClasses)
+      byte[] outputBytes = visitAndReturnBytecode(inputBytes, weavedClasses, exclusion)
       Files.write(output, outputBytes)
     } else {
       Files.copy(input, output)
@@ -78,14 +82,14 @@ class Processor {
   }
 
   private static byte[] visitAndReturnBytecode(byte[] originBytes,
-      List<WeavedClass> weavedClasses) {
+      List<WeavedClass> weavedClasses, Map<String, List<String>> exclusion) {
 
     ClassReader classReader = new ClassReader(originBytes)
     ClassWriter classWriter =
         new CompactClassWriter(classReader,
             ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS)
 
-    Map<String, List<MethodDelegate>> map = preCheckAndRetrieve(originBytes)
+    Map<String, List<MethodDelegate>> map = preCheckAndRetrieve(originBytes, exclusion)
     DebounceModifyClassAdapter classAdapter = new DebounceModifyClassAdapter(classWriter, map)
     try {
       classReader.accept(classAdapter, ClassReader.EXPAND_FRAMES)
@@ -99,10 +103,11 @@ class Processor {
     return originBytes
   }
 
-  private static Map<String, List<MethodDelegate>> preCheckAndRetrieve(byte[] bytes) {
+  private static Map<String, List<MethodDelegate>> preCheckAndRetrieve(byte[] bytes,
+      Map<String, List<String>> exclusion) {
 
     ClassReader classReader = new ClassReader(bytes)
-    PreCheckVisitorAdapter preCheckVisitorAdapter = new PreCheckVisitorAdapter()
+    PreCheckVisitorAdapter preCheckVisitorAdapter = new PreCheckVisitorAdapter(exclusion)
     try {
       classReader.accept(preCheckVisitorAdapter, ClassReader.SKIP_FRAMES)
     } catch (Exception e) {

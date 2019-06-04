@@ -19,7 +19,8 @@ public class WeavedClass implements Serializable {
     this.className = className;
   }
 
-  public void addDebouncedMethod(String methodSignature) {
+  public void
+  addDebouncedMethod(String methodSignature) {
     debouncedMethods.add(methodSignature);
   }
 

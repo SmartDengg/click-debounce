@@ -71,6 +71,8 @@ class DebounceIncrementalTransform extends Transform {
   void transform(TransformInvocation invocation)
       throws TransformException, InterruptedException, IOException {
 
+    ForkJoinExecutor executor = ForkJoinExecutor.instance
+
     def weavedClassesContainer = []
     weavedVariantClassesMap[invocation.context.variantName] = weavedClassesContainer
 
@@ -94,13 +96,11 @@ class DebounceIncrementalTransform extends Transform {
               jarInput.scopes,
               Format.JAR).toPath()
 
-          /** *************************************************************/
-          writer.println "INPUT: ${inputPath.toString()}"
-          writer.println "CHANGED: ${jarInput.status} "
-          writer.println "OUTPUT: ${outputPtah.toString()} "
-          writer.println "INCREMENTAL: ${invocation.isIncremental()}"
-          writer.println()
-          /** *************************************************************/
+          /************************** Write to file START *************************************/
+          Utils.writeStatusToFile(writer, inputPath.toString(), jarInput.status,
+              outputPtah.toString(),
+              invocation.isIncremental())
+          /************************** Write to file END *************************************/
 
           if (invocation.isIncremental()) {
 
@@ -110,14 +110,18 @@ class DebounceIncrementalTransform extends Transform {
               case Status.ADDED:
               case Status.CHANGED:
                 Files.deleteIfExists(outputPtah)
-                Processor.run(inputPath, outputPtah, weavedClassesContainer, Processor.FileType.JAR)
+                Processor.run(inputPath, outputPtah, weavedClassesContainer, debounceExt.exclusion,
+                    Processor.FileType.JAR)
                 break
               case Status.REMOVED:
                 Files.deleteIfExists(outputPtah)
                 break
             }
           } else {
-            Processor.run(inputPath, outputPtah, weavedClassesContainer, Processor.FileType.JAR)
+            executor.execute {
+              Processor.run(inputPath, outputPtah, weavedClassesContainer, debounceExt.exclusion,
+                  Processor.FileType.JAR)
+            }
           }
         }
 
@@ -130,13 +134,11 @@ class DebounceIncrementalTransform extends Transform {
               directoryInput.scopes,
               Format.DIRECTORY).toPath()
 
-          /** *************************************************************/
-          writer.println "INPUT: ${inputRoot.toString()} "
-          writer.println "CHANGED: ${directoryInput.changedFiles.size()} "
-          writer.println "OUTPUT: ${outputRoot.toString()} "
-          writer.println "INCREMENTAL: ${invocation.isIncremental()}"
-          writer.println()
-          /** *************************************************************/
+          /************************** Write to file START *************************************/
+          Utils.writeStatusToFile(writer, inputRoot.toString(),
+              directoryInput.changedFiles.entrySet().toString(),
+              outputRoot.toString(), invocation.isIncremental())
+          /************************** Write to file END *************************************/
 
           if (invocation.isIncremental()) {
             directoryInput.changedFiles.each { File inputFile, Status status ->
@@ -150,7 +152,8 @@ class DebounceIncrementalTransform extends Transform {
                 case Status.ADDED:
                 case Status.CHANGED:
                   //direct run byte code
-                  Processor.directRun(inputPath, outputPath, weavedClassesContainer)
+                  Processor.directRun(inputPath, outputPath, weavedClassesContainer,
+                      debounceExt.exclusion)
                   break
                 case Status.REMOVED:
                   Files.deleteIfExists(outputPath)
@@ -158,14 +161,19 @@ class DebounceIncrementalTransform extends Transform {
               }
             }
           } else {
-            Processor.run(inputRoot, outputRoot, weavedClassesContainer, Processor.FileType.FILE)
+            executor.execute {
+              Processor.run(inputRoot, outputRoot, weavedClassesContainer,
+                  debounceExt.exclusion,
+                  Processor.FileType.FILE)
+            }
           }
         }
       }
     } finally {
+      executor.waitingForAllTasks()
       PrintWriterUtil.closePrintWriter(changedFiles, writer)
-      ColoredLogger.logYellow(
-          "SUCCESS: Printing files status to [" + PrintWriterUtil.fileName(changedFiles) + "]")
+      ColoredLogger.logGreen(
+          "SUCCESSFUL: Printing files status to [" + PrintWriterUtil.fileName(changedFiles) + "]")
     }
   }
 }

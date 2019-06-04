@@ -11,8 +11,6 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
 
-import java.util.concurrent.TimeUnit
-
 @Slf4j
 class DebounceGradlePlugin implements Plugin<Project> {
 
@@ -42,13 +40,12 @@ class DebounceGradlePlugin implements Plugin<Project> {
     def extension = project.extensions.getByName("android") as BaseExtension
     def variantWeavedClassesMap = new LinkedHashMap<String, List<WeavedClass>>()
 
-    extension.registerTransform(
-        new DebounceIncrementalTransform(project, variantWeavedClassesMap,
-            androidPlugin instanceof AppPlugin))
+    extension.registerTransform(new DebounceIncrementalTransform(project, variantWeavedClassesMap,
+        androidPlugin instanceof AppPlugin))
 
     project.afterEvaluate {
-      Utils.forExtension(extension) { variant ->
-        createWriteMappingTask(project, variant, variantWeavedClassesMap)
+      Utils.forExtension(extension) {
+        variant -> createWriteMappingTask(project, variant, variantWeavedClassesMap)
       }
     }
   }
@@ -58,16 +55,6 @@ class DebounceGradlePlugin implements Plugin<Project> {
 
     def mappingTaskName = "outputMappingFor${variant.name.capitalize()}"
     Task debounceTask = project.tasks["transformClassesWithDebounceFor${variant.name.capitalize()}"]
-
-    debounceTask.configure {
-      def startTime
-      doFirst { startTime = System.nanoTime() }
-      doLast {
-        println()
-        println " --> COST: ${TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime)} ms"
-        println()
-      }
-    }
 
     Task outputMappingTask = project.tasks.create(//
         name: "${mappingTaskName}",
@@ -79,8 +66,13 @@ class DebounceGradlePlugin implements Plugin<Project> {
               variant.name, 'classes.txt')
     }
 
+    debounceTask.configure(Utils.taskTimedConfigure)
+    outputMappingTask.configure(Utils.taskTimedConfigure)
+
     debounceTask.finalizedBy(outputMappingTask)
     outputMappingTask.onlyIf { debounceTask.didWork }
     outputMappingTask.inputs.files(debounceTask.outputs.files)
   }
 }
+
+

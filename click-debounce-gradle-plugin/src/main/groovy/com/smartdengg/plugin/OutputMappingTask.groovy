@@ -48,14 +48,14 @@ class OutputMappingTask extends DefaultTask {
         } else {
           state = 'FIRST RUN'
         }
-        ColoredLogger.log("OUT OF DATE: ${change.file.name}:$state")
+        ColoredLogger.logBlue("OUT OF DATE: ${change.file.name}:$state")
       }
     }
 
     inputs.removed { change ->
       if (change.file.directory) return
       if (loggable && Utils.isMatchCondition(change.file.name)) {
-        ColoredLogger.log("REMOVED: ${change.file.name}")
+        ColoredLogger.logBlue("REMOVED: ${change.file.name}")
       }
     }
 
@@ -69,14 +69,15 @@ class OutputMappingTask extends DefaultTask {
       }.each { weavedClass ->
         writer.println "${weavedClass.className}:"
         weavedClass.debouncedMethods.each { method ->
-          if (loggable) ColoredLogger.log("ADD $weavedClass.className : $method")
+          if (loggable) ColoredLogger.logBlue("ADD: $weavedClass.className : $method")
           writer.println "\t -> $method"
         }
       }
     } finally {
       PrintWriterUtil.closePrintWriter(mappingFile, writer)
-      ColoredLogger.logYellow(
-          "SUCCESS: Writing TXT mapping report to [" + PrintWriterUtil.fileName(mappingFile) + "]")
+      ColoredLogger.logGreen(
+          "SUCCESSFUL: Writing txt mapping report to [" + PrintWriterUtil.fileName(mappingFile) +
+              "]")
     }
   }
 }

@@ -20,9 +20,12 @@ public class PreCheckVisitorAdapter extends ClassVisitor implements Opcodes {
 
   private String className;
   private Map<String, List<MethodDelegate>> unWeavedClassMap = new HashMap<>();
+  private Map<String, List<String>> exclusion;
+  private List<String> exclusionMethodDes;
 
-  public PreCheckVisitorAdapter() {
+  public PreCheckVisitorAdapter(Map<String, List<String>> exclusion) {
     super(Opcodes.ASM6);
+    this.exclusion = exclusion;
   }
 
   @Override
@@ -30,15 +33,18 @@ public class PreCheckVisitorAdapter extends ClassVisitor implements Opcodes {
       String[] interfaces) {
     super.visit(version, access, name, signature, superName, interfaces);
     this.className = name;
+    this.exclusionMethodDes = exclusion.get(name);
   }
 
   @Override public MethodVisitor visitMethod(int access, String name, String desc, String signature,
       String[] exceptions) {
 
-    if (Utils.isViewOnclickMethod(access, name, desc) || Utils.isListViewOnItemOnclickMethod(access,
-        name, desc)) {
-      return new MethodNodeAdapter(api, access, name, desc, signature, exceptions, className,
-          unWeavedClassMap);
+    if (exclusionMethodDes == null || !exclusionMethodDes.contains(name + desc)) {
+      if (Utils.isViewOnclickMethod(access, name, desc) || Utils.isListViewOnItemOnclickMethod(
+          access, name, desc)) {
+        return new MethodNodeAdapter(api, access, name, desc, signature, exceptions, className,
+            unWeavedClassMap);
+      }
     }
 
     return super.visitMethod(access, name, desc, signature, exceptions);
