@@ -53,7 +53,7 @@ class DebounceIncrementalTransform extends Transform {
   @Override
   Set<QualifiedContent.Scope> getScopes() {
     if (project.plugins.hasPlugin(AppPlugin)) return TransformManager.SCOPE_FULL_PROJECT
-    return QualifiedContent.Scope.PROJECT
+    return TransformManager.PROJECT_ONLY
   }
 
   @Override
