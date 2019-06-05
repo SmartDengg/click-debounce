@@ -2,6 +2,7 @@ package com.smartdengg.plugin
 
 import com.android.annotations.NonNull
 import com.android.build.api.transform.*
+import com.android.build.gradle.AppPlugin
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.google.common.base.Joiner
 import com.google.common.collect.ImmutableList
@@ -23,15 +24,13 @@ class DebounceIncrementalTransform extends Transform {
   Project project
   DebounceExtension debounceExt
   Map<String, List<WeavedClass>> weavedVariantClassesMap
-  def isApp
   File debounceOutDir
 
   DebounceIncrementalTransform(Project project,
-      Map<String, List<WeavedClass>> weavedVariantClassesMap, boolean isApp) {
+      Map<String, List<WeavedClass>> weavedVariantClassesMap) {
     this.project = project
     this.debounceExt = project."${DebounceExtension.NAME}"
     this.weavedVariantClassesMap = weavedVariantClassesMap
-    this.isApp = isApp
     this.debounceOutDir = new File(Joiner.on(File.separatorChar).join(project.buildDir,
         FD_OUTPUTS,
         'debounce',
@@ -53,8 +52,8 @@ class DebounceIncrementalTransform extends Transform {
   @NonNull
   @Override
   Set<QualifiedContent.Scope> getScopes() {
-    if (isApp) return TransformManager.SCOPE_FULL_PROJECT
-    return TransformManager.PROJECT_ONLY
+    if (project.plugins.hasPlugin(AppPlugin)) return TransformManager.SCOPE_FULL_PROJECT
+    return QualifiedContent.Scope.PROJECT
   }
 
   @Override

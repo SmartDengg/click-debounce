@@ -40,8 +40,7 @@ class DebounceGradlePlugin implements Plugin<Project> {
     def extension = project.extensions.getByName("android") as BaseExtension
     def variantWeavedClassesMap = new LinkedHashMap<String, List<WeavedClass>>()
 
-    extension.registerTransform(new DebounceIncrementalTransform(project, variantWeavedClassesMap,
-        androidPlugin instanceof AppPlugin))
+    extension.registerTransform(new DebounceIncrementalTransform(project, variantWeavedClassesMap))
 
     project.afterEvaluate {
       Utils.forExtension(extension) {
