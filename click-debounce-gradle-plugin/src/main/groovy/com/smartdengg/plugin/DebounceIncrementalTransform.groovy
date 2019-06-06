@@ -110,7 +110,7 @@ class DebounceIncrementalTransform extends Transform {
               case Status.CHANGED:
                 Files.deleteIfExists(outputPtah)
                 Processor.run(inputPath, outputPtah, weavedClassesContainer, debounceExt.exclusion,
-                    Processor.FileType.JAR)
+                    Processor.Input.JAR)
                 break
               case Status.REMOVED:
                 Files.deleteIfExists(outputPtah)
@@ -119,7 +119,7 @@ class DebounceIncrementalTransform extends Transform {
           } else {
             executor.execute {
               Processor.run(inputPath, outputPtah, weavedClassesContainer, debounceExt.exclusion,
-                  Processor.FileType.JAR)
+                  Processor.Input.JAR)
             }
           }
         }
@@ -163,7 +163,7 @@ class DebounceIncrementalTransform extends Transform {
             executor.execute {
               Processor.run(inputRoot, outputRoot, weavedClassesContainer,
                   debounceExt.exclusion,
-                  Processor.FileType.FILE)
+                  Processor.Input.FILE)
             }
           }
         }

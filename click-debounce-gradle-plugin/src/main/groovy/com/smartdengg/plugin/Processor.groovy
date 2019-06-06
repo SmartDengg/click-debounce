@@ -3,6 +3,7 @@ package com.smartdengg.plugin
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.Iterables
 import com.smartdengg.compile.*
+import com.smartdengg.plugin.Utils
 import groovy.transform.PackageScope
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassWriter
@@ -12,22 +13,22 @@ import java.nio.file.attribute.BasicFileAttributes
 
 class Processor {
 
-  enum FileType {
+  enum Input {
     JAR,
     FILE
   }
 
   @PackageScope static void run(Path input, Path output, List<WeavedClass> weavedClasses,
       Map<String, List<String>> exclusion,
-      FileType fileType) throws IOException {
+      Input type) throws IOException {
 
-    switch (fileType) {
+    switch (type) {
 
-      case FileType.JAR:
+      case Input.JAR:
         processJar(input, output, weavedClasses, exclusion)
         break
 
-      case FileType.FILE:
+      case Input.FILE:
         processFile(input, output, weavedClasses, exclusion)
         break
     }
@@ -88,7 +89,7 @@ class Processor {
         new CompactClassWriter(classReader,
             ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS)
 
-    Map<String, List<MethodDescriptor>> map = preCheckAndRetrieve(originBytes, exclusion)
+    Map<String, List<MethodDescriptor>> map = checkAndCollect(originBytes, exclusion)
     DebounceModifyClassAdapter classAdapter = new DebounceModifyClassAdapter(classWriter, map)
     try {
       classReader.accept(classAdapter, ClassReader.EXPAND_FRAMES)
@@ -102,17 +103,16 @@ class Processor {
     return originBytes
   }
 
-  private static Map<String, List<MethodDescriptor>> preCheckAndRetrieve(byte[] bytes,
+  private static Map<String, List<MethodDescriptor>> checkAndCollect(byte[] bytes,
       Map<String, List<String>> exclusion) {
 
-    ClassReader classReader = new ClassReader(bytes)
-    CheckAndCollectClassAdapter preCheckVisitorAdapter = new CheckAndCollectClassAdapter(exclusion)
+    CheckAndCollectClassAdapter visitor = new CheckAndCollectClassAdapter(exclusion)
     try {
-      classReader.accept(preCheckVisitorAdapter, ClassReader.SKIP_FRAMES)
+      new ClassReader(bytes).accept(visitor, ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES)
     } catch (Exception e) {
       println "Exception occurred when visit code \n " + e.printStackTrace()
     }
 
-    return preCheckVisitorAdapter.getUnWeavedClassMap()
+    return visitor.getUnWeavedClassMap()
   }
 }

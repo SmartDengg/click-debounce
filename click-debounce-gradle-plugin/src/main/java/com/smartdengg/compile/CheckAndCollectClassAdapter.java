@@ -23,7 +23,6 @@ public class CheckAndCollectClassAdapter extends ClassVisitor implements Opcodes
   private Map<String, List<MethodDescriptor>> unWeavedClassMap = new HashMap<>();
   private Map<String, List<String>> exclusion;
   private List<String> exclusionMethods;
-  private boolean hasDebouncedAnnotation;
 
   public CheckAndCollectClassAdapter(Map<String, List<String>> exclusion) {
     super(Opcodes.ASM6);
@@ -41,8 +40,6 @@ public class CheckAndCollectClassAdapter extends ClassVisitor implements Opcodes
   @Override public MethodVisitor visitMethod(int access, String name, String desc, String signature,
       String[] exceptions) {
 
-    if (hasDebouncedAnnotation) return null;
-
     if (exclusionMethods == null || !exclusionMethods.contains(name + desc)) {
       if (Utils.isViewOnclickMethod(access, name, desc) || Utils.isListViewOnItemOnclickMethod(
           access, name, desc)) {
@@ -54,12 +51,6 @@ public class CheckAndCollectClassAdapter extends ClassVisitor implements Opcodes
     return null;
   }
 
-  @Override public AnnotationVisitor visitAnnotation(String descriptor, boolean visible) {
-    /*Lcom/smartdengg/clickdebounce/Debounced;*/
-    hasDebouncedAnnotation |= descriptor.equals("Lcom/smartdengg/clickdebounce/Debounced;");
-    return null;
-  }
-
   public Map<String, List<MethodDescriptor>> getUnWeavedClassMap() {
     return unWeavedClassMap;
   }
@@ -68,6 +59,7 @@ public class CheckAndCollectClassAdapter extends ClassVisitor implements Opcodes
 
     private String className;
     private Map<String, List<MethodDescriptor>> classNameToMethodDescriptorMap;
+    private boolean hasDebouncedAnnotation;
 
     MethodNodeAdapter(int api, int access, String name, String desc, String signature,
         String[] exceptions, String className,
@@ -77,7 +69,14 @@ public class CheckAndCollectClassAdapter extends ClassVisitor implements Opcodes
       this.classNameToMethodDescriptorMap = classNameToMethodDescriptorMap;
     }
 
+    @Override public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
+      /*Lcom/smartdengg/clickdebounce/Debounced;*/
+      hasDebouncedAnnotation |= desc.equals("Lcom/smartdengg/clickdebounce/Debounced;");
+      return null;
+    }
+
     @Override public void visitEnd() {
+      if (hasDebouncedAnnotation) return;
       if (hasInvokeOperation()) {
         List<MethodDescriptor> methodDescriptors =
             classNameToMethodDescriptorMap.getOrDefault(className, new ArrayList<>());
