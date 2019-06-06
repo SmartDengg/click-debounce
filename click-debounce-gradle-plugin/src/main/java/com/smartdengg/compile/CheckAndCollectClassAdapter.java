@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
@@ -16,14 +17,15 @@ import org.objectweb.asm.tree.MethodNode;
  * 作者:  SmartDengg <br>
  * 描述:
  */
-public class PreCheckVisitorAdapter extends ClassVisitor implements Opcodes {
+public class CheckAndCollectClassAdapter extends ClassVisitor implements Opcodes {
 
   private String className;
-  private Map<String, List<MethodDelegate>> unWeavedClassMap = new HashMap<>();
+  private Map<String, List<MethodDescriptor>> unWeavedClassMap = new HashMap<>();
   private Map<String, List<String>> exclusion;
-  private List<String> exclusionMethodDes;
+  private List<String> exclusionMethods;
+  private boolean hasDebouncedAnnotation;
 
-  public PreCheckVisitorAdapter(Map<String, List<String>> exclusion) {
+  public CheckAndCollectClassAdapter(Map<String, List<String>> exclusion) {
     super(Opcodes.ASM6);
     this.exclusion = exclusion;
   }
@@ -33,13 +35,15 @@ public class PreCheckVisitorAdapter extends ClassVisitor implements Opcodes {
       String[] interfaces) {
     super.visit(version, access, name, signature, superName, interfaces);
     this.className = name;
-    this.exclusionMethodDes = exclusion.get(name);
+    this.exclusionMethods = exclusion.get(name);
   }
 
   @Override public MethodVisitor visitMethod(int access, String name, String desc, String signature,
       String[] exceptions) {
 
-    if (exclusionMethodDes == null || !exclusionMethodDes.contains(name + desc)) {
+    if (hasDebouncedAnnotation) return null;
+
+    if (exclusionMethods == null || !exclusionMethods.contains(name + desc)) {
       if (Utils.isViewOnclickMethod(access, name, desc) || Utils.isListViewOnItemOnclickMethod(
           access, name, desc)) {
         return new MethodNodeAdapter(api, access, name, desc, signature, exceptions, className,
@@ -47,31 +51,38 @@ public class PreCheckVisitorAdapter extends ClassVisitor implements Opcodes {
       }
     }
 
-    return super.visitMethod(access, name, desc, signature, exceptions);
+    return null;
   }
 
-  public Map<String, List<MethodDelegate>> getUnWeavedClassMap() {
+  @Override public AnnotationVisitor visitAnnotation(String descriptor, boolean visible) {
+    /*Lcom/smartdengg/clickdebounce/Debounced;*/
+    hasDebouncedAnnotation |= descriptor.equals("Lcom/smartdengg/clickdebounce/Debounced;");
+    return null;
+  }
+
+  public Map<String, List<MethodDescriptor>> getUnWeavedClassMap() {
     return unWeavedClassMap;
   }
 
   static class MethodNodeAdapter extends MethodNode {
 
     private String className;
-    private Map<String, List<MethodDelegate>> map;
+    private Map<String, List<MethodDescriptor>> classNameToMethodDescriptorMap;
 
     MethodNodeAdapter(int api, int access, String name, String desc, String signature,
-        String[] exceptions, String className, Map<String, List<MethodDelegate>> map) {
+        String[] exceptions, String className,
+        Map<String, List<MethodDescriptor>> classNameToMethodDescriptorMap) {
       super(api, access, name, desc, signature, exceptions);
       this.className = className;
-      this.map = map;
+      this.classNameToMethodDescriptorMap = classNameToMethodDescriptorMap;
     }
 
     @Override public void visitEnd() {
       if (hasInvokeOperation()) {
-        List<MethodDelegate> methodDelegates = map.get(className);
-        if (methodDelegates == null) methodDelegates = new ArrayList<>();
-        methodDelegates.add(new MethodDelegate(access, name, desc));
-        map.put(className, methodDelegates);
+        List<MethodDescriptor> methodDescriptors =
+            classNameToMethodDescriptorMap.getOrDefault(className, new ArrayList<>());
+        methodDescriptors.add(new MethodDescriptor(access, name, desc));
+        classNameToMethodDescriptorMap.put(className, methodDescriptors);
       }
     }
 

@@ -1,6 +1,5 @@
 package com.smartdengg.compile;
 
-import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
@@ -18,16 +17,12 @@ import static org.objectweb.asm.Opcodes.RETURN;
  */
 class ListView$OnItemClickListenerMethodAdapter extends MethodVisitor {
 
-  private boolean weaved;
-
   ListView$OnItemClickListenerMethodAdapter(MethodVisitor methodVisitor) {
     super(Opcodes.ASM6, methodVisitor);
   }
 
   @Override public void visitCode() {
     super.visitCode();
-
-    if (weaved) return;
 
     addDebouncedAnno(mv);
 
@@ -38,13 +33,5 @@ class ListView$OnItemClickListenerMethodAdapter extends MethodVisitor {
     mv.visitJumpInsn(IFNE, label);
     mv.visitInsn(RETURN);
     mv.visitLabel(label);
-  }
-
-  @Override public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
-
-    /*Lcom/smartdengg/clickdebounce/Debounced;*/
-    weaved = desc.equals("Lcom/smartdengg/clickdebounce/Debounced;");
-
-    return super.visitAnnotation(desc, visible);
   }
 }

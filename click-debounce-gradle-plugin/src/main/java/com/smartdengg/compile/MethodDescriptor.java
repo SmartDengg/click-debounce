@@ -7,13 +7,13 @@ import java.util.Objects;
  * 作者:  SmartDengg <br>
  * 描述:
  */
-public class MethodDelegate {
+public class MethodDescriptor {
 
   private int access;
   private String name;
   private String desc;
 
-  MethodDelegate(int access, String name, String desc) {
+  MethodDescriptor(int access, String name, String desc) {
     this.access = access;
     this.name = name;
     this.desc = desc;

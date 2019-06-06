@@ -18,10 +18,10 @@ public class DebounceModifyClassAdapter extends ClassVisitor implements Opcodes 
   /*For debug*/
   private String className;
   private WeavedClass weavedClass;
-  private Map<String, List<MethodDelegate>> unWovenClassMap;
+  private Map<String, List<MethodDescriptor>> unWovenClassMap;
 
   public DebounceModifyClassAdapter(ClassVisitor classVisitor,
-      Map<String, List<MethodDelegate>> unWovenClassMap) {
+      Map<String, List<MethodDescriptor>> unWovenClassMap) {
     super(Opcodes.ASM6, classVisitor);
     this.unWovenClassMap = unWovenClassMap;
   }
@@ -56,9 +56,9 @@ public class DebounceModifyClassAdapter extends ClassVisitor implements Opcodes 
 
   private boolean isHit(int access, String name, String desc) {
     if (unWovenClassMap == null || unWovenClassMap.size() == 0) return false;
-    List<MethodDelegate> methodDelegates = unWovenClassMap.get(weavedClass.className);
-    if (methodDelegates != null) {
-      for (MethodDelegate delegateMethod : methodDelegates) {
+    List<MethodDescriptor> methodDescriptors = unWovenClassMap.get(weavedClass.className);
+    if (methodDescriptors != null) {
+      for (MethodDescriptor delegateMethod : methodDescriptors) {
         if (delegateMethod.match(access, name, desc)) return true;
       }
     }

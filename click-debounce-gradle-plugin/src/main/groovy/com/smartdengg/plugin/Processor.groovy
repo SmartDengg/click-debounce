@@ -3,7 +3,6 @@ package com.smartdengg.plugin
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.Iterables
 import com.smartdengg.compile.*
-import com.smartdengg.plugin.Utils
 import groovy.transform.PackageScope
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassWriter
@@ -89,7 +88,7 @@ class Processor {
         new CompactClassWriter(classReader,
             ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS)
 
-    Map<String, List<MethodDelegate>> map = preCheckAndRetrieve(originBytes, exclusion)
+    Map<String, List<MethodDescriptor>> map = preCheckAndRetrieve(originBytes, exclusion)
     DebounceModifyClassAdapter classAdapter = new DebounceModifyClassAdapter(classWriter, map)
     try {
       classReader.accept(classAdapter, ClassReader.EXPAND_FRAMES)
@@ -103,11 +102,11 @@ class Processor {
     return originBytes
   }
 
-  private static Map<String, List<MethodDelegate>> preCheckAndRetrieve(byte[] bytes,
+  private static Map<String, List<MethodDescriptor>> preCheckAndRetrieve(byte[] bytes,
       Map<String, List<String>> exclusion) {
 
     ClassReader classReader = new ClassReader(bytes)
-    PreCheckVisitorAdapter preCheckVisitorAdapter = new PreCheckVisitorAdapter(exclusion)
+    CheckAndCollectClassAdapter preCheckVisitorAdapter = new CheckAndCollectClassAdapter(exclusion)
     try {
       classReader.accept(preCheckVisitorAdapter, ClassReader.SKIP_FRAMES)
     } catch (Exception e) {
