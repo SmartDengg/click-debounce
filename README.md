@@ -1,7 +1,7 @@
 | README.md |
 |:---|
 
-# asm-clickdebounce
+# click-debounce
 
 [![](https://jitpack.io/v/SmartDengg/asm-clickdebounce.svg)](https://jitpack.io/#SmartDengg/asm-clickdebounce)
 
