@@ -28,14 +28,26 @@ class Utils implements Opcodes {
     return (access & ACC_STATIC) != 0;
   }
 
+  static boolean isAbstract(int access) {
+    return (access & ACC_ABSTRACT) != 0;
+  }
+
+  static boolean isbridge(int access) {
+    return (access & ACC_BRIDGE) != 0;
+  }
+
+  static boolean isSynthetic(int access) {
+    return (access & ACC_SYNTHETIC) != 0;
+  }
+
   static boolean isViewOnclickMethod(int access, String name, String desc) {
-    return (Utils.isPublic(access) && !Utils.isStatic(access)) && //
-        name.equals("onClick") && //
-        desc.equals("(Landroid/view/View;)V");
+    return (Utils.isPublic(access) && !Utils.isStatic(access) && !isAbstract(access)) //
+        && name.equals("onClick") //
+        && desc.equals("(Landroid/view/View;)V");
   }
 
   static boolean isListViewOnItemOnclickMethod(int access, String name, String desc) {
-    return (Utils.isPublic(access) && !Utils.isStatic(access)) && //
+    return (Utils.isPublic(access) && !Utils.isStatic(access) && !isAbstract(access)) && //
         name.equals("onItemClick") && //
         desc.equals("(Landroid/widget/AdapterView;Landroid/view/View;IJ)V");
   }
