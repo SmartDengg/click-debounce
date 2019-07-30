@@ -1,7 +1,7 @@
 | README.md |
 |:---|
 
-# asm-clickdebounce
+# click-debounce
 
 [![](https://jitpack.io/v/SmartDengg/asm-clickdebounce.svg)](https://jitpack.io/#SmartDengg/asm-clickdebounce)
 
@@ -88,9 +88,9 @@ apply plugin: 'smartdengg.clickdebounce'
 ```groovy
 
 debounce {
-  // logable
+  // enable log
   loggable = true
-  // asm description [class: [methods]]
+  // java bytecode descriptor: [class: [methods]]
   exclusion = ["com/smartdengg/clickdebounce/ClickProxy": ['onClick(Landroid/view/View;)V',
                                                            'onItemClick(Landroid/widget/AdapterView;Landroid/view/View;IJ)V']]
 }
