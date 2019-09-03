@@ -3,6 +3,9 @@ package com.smartdengg.plugin
 import com.google.common.base.Charsets
 import com.google.common.io.Files
 import com.smartdengg.compile.WeavedClass
+import com.smartdengg.plugin.api.DebounceExtension
+import com.smartdengg.plugin.internal.ColoredLogger
+import com.smartdengg.plugin.internal.Utils
 import org.apache.commons.io.FileUtils
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
@@ -48,14 +51,14 @@ class OutputMappingTask extends DefaultTask {
         } else {
           state = 'FIRST RUN'
         }
-        ColoredLogger.logBlue("OUT OF DATE: ${change.file.name}:$state")
+        ColoredLogger.logGreen("[OUT OF DATE]: ${change.file.name}:$state")
       }
     }
 
     inputs.removed { change ->
       if (change.file.directory) return
       if (loggable && Utils.isMatchCondition(change.file.name)) {
-        ColoredLogger.logBlue("REMOVED: ${change.file.name}")
+        ColoredLogger.logGreen("[REMOVED]: ${change.file.name}")
       }
     }
 
@@ -69,15 +72,14 @@ class OutputMappingTask extends DefaultTask {
       }.each { weavedClass ->
         writer.println "${weavedClass.className}:"
         weavedClass.debouncedMethods.each { method ->
-          if (loggable) ColoredLogger.logBlue("ADD: $weavedClass.className : $method")
+          if (loggable) ColoredLogger.logGreen("[ADD]: $weavedClass.className : $method")
           writer.println "\t -> $method"
         }
       }
     } finally {
       PrintWriterUtil.closePrintWriter(mappingFile, writer)
-      ColoredLogger.logGreen(
-          "SUCCESSFUL: Writing txt mapping report to [" + PrintWriterUtil.fileName(mappingFile) +
-              "]")
+      ColoredLogger.log(
+          "Wrote TXT report to file://${PrintWriterUtil.fileName(mappingFile)}")
     }
   }
 }

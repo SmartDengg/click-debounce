@@ -1,4 +1,4 @@
-package com.smartdengg.plugin
+package com.smartdengg.plugin.api
 
 /**
  * 创建时间:  2019/06/03 12:13 <br>

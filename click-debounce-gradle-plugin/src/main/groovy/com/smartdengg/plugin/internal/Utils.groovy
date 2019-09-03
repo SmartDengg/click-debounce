@@ -1,10 +1,11 @@
-package com.smartdengg.plugin
+package com.smartdengg.plugin.internal
 
 import com.android.SdkConstants
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.FeatureExtension
 import com.android.build.gradle.LibraryExtension
+import com.android.build.gradle.api.BaseVariant
 import com.android.utils.FileUtils
 
 import java.nio.file.Path
@@ -26,18 +27,16 @@ class Utils {
         !name.matches('.*/BuildConfig\\.class')
   }
 
-  static void forExtension(BaseExtension extension, Closure closure) {
+  static void forEachVariant(BaseExtension androidExtension, Closure<BaseVariant> closure) {
 
-    switch (extension) {
-      case AppExtension:
-        extension.applicationVariants.all(closure)
-        break
-      case LibraryExtension:
-        extension.libraryVariants.all(closure)
-        break
-      case FeatureExtension:
-        extension.featureVariants.all(closure)
-        break
+    if (androidExtension instanceof AppExtension) {
+      androidExtension.applicationVariants.all(closure)
+    }
+    if (androidExtension instanceof LibraryExtension) {
+      androidExtension.libraryVariants.all(closure)
+    }
+    if (androidExtension instanceof FeatureExtension) {
+      androidExtension.featureVariants.all(closure)
     }
   }
 

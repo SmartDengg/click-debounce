@@ -7,6 +7,11 @@ import com.android.build.gradle.internal.pipeline.TransformManager
 import com.google.common.base.Joiner
 import com.google.common.collect.ImmutableList
 import com.smartdengg.compile.WeavedClass
+import com.smartdengg.plugin.api.DebounceExtension
+import com.smartdengg.plugin.internal.ColoredLogger
+import com.smartdengg.plugin.internal.ForkJoinExecutor
+import com.smartdengg.plugin.internal.Processor
+import com.smartdengg.plugin.internal.Utils
 import groovy.util.logging.Slf4j
 import org.apache.commons.io.FileUtils
 import org.gradle.api.Project
@@ -20,6 +25,8 @@ import static com.google.common.base.Preconditions.checkNotNull
 
 @Slf4j
 class DebounceIncrementalTransform extends Transform {
+
+  static final TASK_NAME = 'debounce'
 
   Project project
   DebounceExtension debounceExt
@@ -40,7 +47,7 @@ class DebounceIncrementalTransform extends Transform {
   @NonNull
   @Override
   String getName() {
-    return "debounce"
+    return TASK_NAME
   }
 
   @NonNull
@@ -171,8 +178,8 @@ class DebounceIncrementalTransform extends Transform {
     } finally {
       executor.waitingForAllTasks()
       PrintWriterUtil.closePrintWriter(changedFiles, writer)
-      ColoredLogger.logGreen(
-          "SUCCESSFUL: Printing files status to [" + PrintWriterUtil.fileName(changedFiles) + "]")
+      ColoredLogger.log(
+          "Wrote file status to file://${PrintWriterUtil.fileName(changedFiles)}")
     }
   }
 }

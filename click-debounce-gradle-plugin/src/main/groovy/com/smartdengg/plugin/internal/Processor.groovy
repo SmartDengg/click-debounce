@@ -1,10 +1,9 @@
-package com.smartdengg.plugin
+package com.smartdengg.plugin.internal
 
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.Iterables
 import com.smartdengg.compile.*
-import com.smartdengg.plugin.Utils
-import groovy.transform.PackageScope
+import com.smartdengg.plugin.internal.Utils
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassWriter
 
@@ -18,7 +17,7 @@ class Processor {
     FILE
   }
 
-  @PackageScope static void run(Path input, Path output, List<WeavedClass> weavedClasses,
+  static void run(Path input, Path output, List<WeavedClass> weavedClasses,
       Map<String, List<String>> exclusion,
       Input type) throws IOException {
 
@@ -70,7 +69,7 @@ class Processor {
     })
   }
 
-  @PackageScope static void directRun(Path input, Path output,
+  static void directRun(Path input, Path output,
       List<WeavedClass> weavedClasses, Map<String, List<String>> exclusion) {
     if (Utils.isMatchCondition(input.toString())) {
       byte[] inputBytes = Files.readAllBytes(input)

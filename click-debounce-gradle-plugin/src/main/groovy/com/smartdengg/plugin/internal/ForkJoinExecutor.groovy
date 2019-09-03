@@ -1,4 +1,4 @@
-package com.smartdengg.plugin
+package com.smartdengg.plugin.internal
 
 import com.google.common.base.Preconditions
 import com.google.common.collect.Sets

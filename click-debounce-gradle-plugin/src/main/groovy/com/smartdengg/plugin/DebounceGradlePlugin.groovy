@@ -5,14 +5,26 @@ import com.android.build.gradle.api.BaseVariant
 import com.android.builder.model.AndroidProject
 import com.android.utils.FileUtils
 import com.smartdengg.compile.WeavedClass
+import com.smartdengg.plugin.api.DebounceExtension
+import com.smartdengg.plugin.internal.Utils
 import groovy.util.logging.Slf4j
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.internal.reflect.Instantiator
+
+import javax.inject.Inject
 
 @Slf4j
 class DebounceGradlePlugin implements Plugin<Project> {
+
+  private final Instantiator instantiator
+
+  @Inject
+  DebounceGradlePlugin(Instantiator instantiator) {
+    this.instantiator = instantiator
+  }
 
   @Override void apply(Project project) {
 
@@ -36,15 +48,16 @@ class DebounceGradlePlugin implements Plugin<Project> {
 
     project.configurations.implementation.dependencies.add(
         project.dependencies.create('com.github.SmartDengg:asm-clickdebounce-runtime:1.1.1'))
-    project.extensions["${DebounceExtension.NAME}"] = project.objects.newInstance(DebounceExtension)
+
+    project.extensions["${DebounceExtension.NAME}"] = instantiator.newInstance(DebounceExtension)
     def extension = project.extensions.getByName("android") as BaseExtension
     def variantWeavedClassesMap = new LinkedHashMap<String, List<WeavedClass>>()
 
     extension.registerTransform(new DebounceIncrementalTransform(project, variantWeavedClassesMap))
 
     project.afterEvaluate {
-      Utils.forExtension(extension) {
-        variant -> createWriteMappingTask(project, variant, variantWeavedClassesMap)
+      Utils.forEachVariant(extension) { BaseVariant variant ->
+        createWriteMappingTask(project, variant, variantWeavedClassesMap)
       }
     }
   }
@@ -53,7 +66,8 @@ class DebounceGradlePlugin implements Plugin<Project> {
       Map<String, List<WeavedClass>> variantWeavedClassesMap) {
 
     def mappingTaskName = "outputMappingFor${variant.name.capitalize()}"
-    Task debounceTask = project.tasks["transformClassesWithDebounceFor${variant.name.capitalize()}"]
+    Task debounceTask = project.tasks[
+        "transformClassesWith${DebounceIncrementalTransform.TASK_NAME.capitalize()}For${variant.name.capitalize()}"]
 
     Task outputMappingTask = project.tasks.create(//
         name: "${mappingTaskName}",

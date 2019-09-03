@@ -1,4 +1,4 @@
-package com.smartdengg.plugin;
+package com.smartdengg.plugin.internal;
 
 class ColoredLogger {
 
