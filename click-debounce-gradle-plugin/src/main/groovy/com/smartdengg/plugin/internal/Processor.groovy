@@ -2,8 +2,10 @@ package com.smartdengg.plugin.internal
 
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.Iterables
-import com.smartdengg.compile.*
-import com.smartdengg.plugin.internal.Utils
+import com.smartdengg.compile.CheckAndCollectClassAdapter
+import com.smartdengg.compile.DebounceModifyClassAdapter
+import com.smartdengg.compile.MethodDescriptor
+import com.smartdengg.compile.WovenClass
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassWriter
 
@@ -17,23 +19,23 @@ class Processor {
     FILE
   }
 
-  static void run(Path input, Path output, List<WeavedClass> weavedClasses,
+  static void run(Path input, Path output, List<WovenClass> wovenClasses,
       Map<String, List<String>> exclusion,
       Input type) throws IOException {
 
     switch (type) {
 
       case Input.JAR:
-        processJar(input, output, weavedClasses, exclusion)
+        processJar(input, output, wovenClasses, exclusion)
         break
 
       case Input.FILE:
-        processFile(input, output, weavedClasses, exclusion)
+        processFile(input, output, wovenClasses, exclusion)
         break
     }
   }
 
-  private static void processJar(Path input, Path output, List<WeavedClass> weavedClasses,
+  private static void processJar(Path input, Path output, List<WovenClass> wovenClasses,
       Map<String, List<String>> exclusion) {
 
     Map<String, String> env = ImmutableMap.of('create', 'true')
@@ -44,19 +46,19 @@ class Processor {
       FileSystems.newFileSystem(outputUri, env).withCloseable { outputFileSystem ->
         Path inputRoot = Iterables.getOnlyElement(inputFileSystem.rootDirectories)
         Path outputRoot = Iterables.getOnlyElement(outputFileSystem.rootDirectories)
-        processFile(inputRoot, outputRoot, weavedClasses, exclusion)
+        processFile(inputRoot, outputRoot, wovenClasses, exclusion)
       }
     }
   }
 
-  private static void processFile(Path input, Path output, List<WeavedClass> weavedClasses,
+  private static void processFile(Path input, Path output, List<WovenClass> wovenClasses,
       Map<String, List<String>> exclusion) {
 
     Files.walkFileTree(input, new SimpleFileVisitor<Path>() {
       @Override
       FileVisitResult visitFile(Path inputPath, BasicFileAttributes attrs) throws IOException {
         Path outputPath = Utils.toOutputPath(output, input, inputPath)
-        directRun(inputPath, outputPath, weavedClasses, exclusion)
+        directRun(inputPath, outputPath, wovenClasses, exclusion)
         return FileVisitResult.CONTINUE
       }
 
@@ -70,10 +72,10 @@ class Processor {
   }
 
   static void directRun(Path input, Path output,
-      List<WeavedClass> weavedClasses, Map<String, List<String>> exclusion) {
+      List<WovenClass> wovenClasses, Map<String, List<String>> exclusion) {
     if (Utils.isMatchCondition(input.toString())) {
       byte[] inputBytes = Files.readAllBytes(input)
-      byte[] outputBytes = visitAndReturnBytecode(inputBytes, weavedClasses, exclusion)
+      byte[] outputBytes = visitAndReturnBytecode(inputBytes, wovenClasses, exclusion)
       Files.write(output, outputBytes)
     } else {
       Files.copy(input, output)
@@ -81,22 +83,23 @@ class Processor {
   }
 
   private static byte[] visitAndReturnBytecode(byte[] originBytes,
-      List<WeavedClass> weavedClasses, Map<String, List<String>> exclusion) {
+      List<WovenClass> wovenClasses, Map<String, List<String>> exclusion) {
 
     ClassReader classReader = new ClassReader(originBytes)
-    ClassWriter classWriter =
-        new CompactClassWriter(classReader,
-            ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS)
+    //    ClassWriter classWriter =
+    //        new CompactClassWriter(classReader,
+    //            ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS)
+    ClassWriter classWriter = new ClassWriter(classReader, 0)
 
     Map<String, List<MethodDescriptor>> map = checkAndCollect(originBytes, exclusion)
     DebounceModifyClassAdapter classAdapter = new DebounceModifyClassAdapter(classWriter, map)
     try {
       classReader.accept(classAdapter, ClassReader.EXPAND_FRAMES)
       //move to visit end?
-      weavedClasses.add(classAdapter.getWovenClass())
+      wovenClasses.add(classAdapter.getWovenClass())
       return classWriter.toByteArray()
     } catch (Exception e) {
-      println "Exception occurred when visit code \n " + e.printStackTrace()
+      e.printStackTrace()
     }
 
     return originBytes
@@ -109,7 +112,7 @@ class Processor {
     try {
       new ClassReader(bytes).accept(visitor, ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES)
     } catch (Exception e) {
-      println "Exception occurred when visit code \n " + e.printStackTrace()
+      e.printStackTrace()
     }
 
     return visitor.getUnWeavedClassMap()

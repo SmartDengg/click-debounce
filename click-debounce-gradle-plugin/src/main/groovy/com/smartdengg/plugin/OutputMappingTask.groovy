@@ -2,7 +2,7 @@ package com.smartdengg.plugin
 
 import com.google.common.base.Charsets
 import com.google.common.io.Files
-import com.smartdengg.compile.WeavedClass
+import com.smartdengg.compile.WovenClass
 import com.smartdengg.plugin.api.DebounceExtension
 import com.smartdengg.plugin.internal.ColoredLogger
 import com.smartdengg.plugin.internal.Utils
@@ -34,11 +34,11 @@ class OutputMappingTask extends DefaultTask {
   Property<Map> classes = project.objects.property(Map.class)
 
   @TaskAction
-  void wrireMapping(IncrementalTaskInputs inputs) {
+  void writeMapping(IncrementalTaskInputs inputs) {
 
     boolean loggable = (project.extensions["$DebounceExtension.NAME"] as DebounceExtension).loggable
     def mappingFile = outputMappingFile.get().asFile
-    List<WeavedClass> weavedClasses = (List<WeavedClass>) classes.get()[variantName.get()]
+    List<WovenClass> wovenClasses = (List<WovenClass>) classes.get()[variantName.get()]
 
     inputs.outOfDate { change ->
       if (change.file.directory) return
@@ -67,12 +67,12 @@ class OutputMappingTask extends DefaultTask {
     PrintWriter writer = PrintWriterUtil.createPrintWriterOut(mappingFile)
 
     try {
-      weavedClasses.findAll {
+      wovenClasses.findAll {
         it.hasDebouncedMethod()
-      }.each { weavedClass ->
-        writer.println "${weavedClass.className}:"
-        weavedClass.debouncedMethods.each { method ->
-          if (loggable) ColoredLogger.logGreen("[ADD]: $weavedClass.className : $method")
+      }.each { wovenClass ->
+        writer.println "${wovenClass.className}:"
+        wovenClass.debouncedMethods.each { method ->
+          if (loggable) ColoredLogger.logGreen("[ADD]: $wovenClass.className:$method")
           writer.println "\t -> $method"
         }
       }

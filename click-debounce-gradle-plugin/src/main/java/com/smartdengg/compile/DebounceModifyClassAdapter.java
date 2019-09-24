@@ -17,7 +17,7 @@ public class DebounceModifyClassAdapter extends ClassVisitor implements Opcodes 
 
   /*For debug*/
   private String className;
-  private WeavedClass weavedClass;
+  private WovenClass wovenClass;
   private Map<String, List<MethodDescriptor>> unWovenClassMap;
 
   public DebounceModifyClassAdapter(ClassVisitor classVisitor,
@@ -30,7 +30,7 @@ public class DebounceModifyClassAdapter extends ClassVisitor implements Opcodes 
   public void visit(int version, int access, String name, String signature, String superName,
       String[] interfaces) {
     super.visit(version, access, name, signature, superName, interfaces);
-    this.weavedClass = new WeavedClass(className = name);
+    this.wovenClass = new WovenClass(className = name);
   }
 
   @Override
@@ -42,13 +42,13 @@ public class DebounceModifyClassAdapter extends ClassVisitor implements Opcodes 
     // android.view.View.OnClickListener.onClick(android.view.View)
     if (Utils.isViewOnclickMethod(access, name, desc) && isHit(access, name, desc)) {
       methodVisitor = new View$OnClickListenerMethodAdapter(methodVisitor);
-      weavedClass.addDebouncedMethod(convertSignature(name, desc));
+      wovenClass.addDebouncedMethod(convertSignature(name, desc));
     }
 
     // android.widget.AdapterView.OnItemClickListener.onItemClick(android.widget.AdapterView,android.view.View,int,long)
     if (Utils.isListViewOnItemOnclickMethod(access, name, desc) && isHit(access, name, desc)) {
       methodVisitor = new ListView$OnItemClickListenerMethodAdapter(methodVisitor);
-      weavedClass.addDebouncedMethod(convertSignature(name, desc));
+      wovenClass.addDebouncedMethod(convertSignature(name, desc));
     }
 
     return methodVisitor;
@@ -56,7 +56,7 @@ public class DebounceModifyClassAdapter extends ClassVisitor implements Opcodes 
 
   private boolean isHit(int access, String name, String desc) {
     if (unWovenClassMap == null || unWovenClassMap.size() == 0) return false;
-    List<MethodDescriptor> methodDescriptors = unWovenClassMap.get(weavedClass.className);
+    List<MethodDescriptor> methodDescriptors = unWovenClassMap.get(wovenClass.className);
     if (methodDescriptors != null) {
       for (MethodDescriptor delegateMethod : methodDescriptors) {
         if (delegateMethod.match(access, name, desc)) return true;
@@ -66,7 +66,7 @@ public class DebounceModifyClassAdapter extends ClassVisitor implements Opcodes 
     return false;
   }
 
-  public WeavedClass getWovenClass() {
-    return weavedClass;
+  public WovenClass getWovenClass() {
+    return wovenClass;
   }
 }

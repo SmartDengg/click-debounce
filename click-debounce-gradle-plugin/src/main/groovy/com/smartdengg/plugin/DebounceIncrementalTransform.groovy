@@ -6,7 +6,7 @@ import com.android.build.gradle.AppPlugin
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.google.common.base.Joiner
 import com.google.common.collect.ImmutableList
-import com.smartdengg.compile.WeavedClass
+import com.smartdengg.compile.WovenClass
 import com.smartdengg.plugin.api.DebounceExtension
 import com.smartdengg.plugin.internal.ColoredLogger
 import com.smartdengg.plugin.internal.ForkJoinExecutor
@@ -30,14 +30,14 @@ class DebounceIncrementalTransform extends Transform {
 
   Project project
   DebounceExtension debounceExt
-  Map<String, List<WeavedClass>> weavedVariantClassesMap
+  Map<String, List<WovenClass>> wovenVariantClassesMap
   File debounceOutDir
 
   DebounceIncrementalTransform(Project project,
-      Map<String, List<WeavedClass>> weavedVariantClassesMap) {
+      Map<String, List<WovenClass>> wovenVariantClassesMap) {
     this.project = project
     this.debounceExt = project."${DebounceExtension.NAME}"
-    this.weavedVariantClassesMap = weavedVariantClassesMap
+    this.wovenVariantClassesMap = wovenVariantClassesMap
     this.debounceOutDir = new File(Joiner.on(File.separatorChar).join(project.buildDir,
         FD_OUTPUTS,
         'debounce',
@@ -79,8 +79,8 @@ class DebounceIncrementalTransform extends Transform {
 
     ForkJoinExecutor executor = ForkJoinExecutor.instance
 
-    def weavedClassesContainer = []
-    weavedVariantClassesMap[invocation.context.variantName] = weavedClassesContainer
+    def wovenClassesContainer = []
+    wovenVariantClassesMap[invocation.context.variantName] = wovenClassesContainer
 
     TransformOutputProvider outputProvider = checkNotNull(invocation.getOutputProvider(),
         "Missing output object for run " + getName())
@@ -116,7 +116,7 @@ class DebounceIncrementalTransform extends Transform {
               case Status.ADDED:
               case Status.CHANGED:
                 Files.deleteIfExists(outputPtah)
-                Processor.run(inputPath, outputPtah, weavedClassesContainer, debounceExt.exclusion,
+                Processor.run(inputPath, outputPtah, wovenClassesContainer, debounceExt.exclusion,
                     Processor.Input.JAR)
                 break
               case Status.REMOVED:
@@ -125,7 +125,7 @@ class DebounceIncrementalTransform extends Transform {
             }
           } else {
             executor.execute {
-              Processor.run(inputPath, outputPtah, weavedClassesContainer, debounceExt.exclusion,
+              Processor.run(inputPath, outputPtah, wovenClassesContainer, debounceExt.exclusion,
                   Processor.Input.JAR)
             }
           }
@@ -158,7 +158,7 @@ class DebounceIncrementalTransform extends Transform {
                 case Status.ADDED:
                 case Status.CHANGED:
                   //direct run byte code
-                  Processor.directRun(inputPath, outputPath, weavedClassesContainer,
+                  Processor.directRun(inputPath, outputPath, wovenClassesContainer,
                       debounceExt.exclusion)
                   break
                 case Status.REMOVED:
@@ -168,7 +168,7 @@ class DebounceIncrementalTransform extends Transform {
             }
           } else {
             executor.execute {
-              Processor.run(inputRoot, outputRoot, weavedClassesContainer,
+              Processor.run(inputRoot, outputRoot, wovenClassesContainer,
                   debounceExt.exclusion,
                   Processor.Input.FILE)
             }

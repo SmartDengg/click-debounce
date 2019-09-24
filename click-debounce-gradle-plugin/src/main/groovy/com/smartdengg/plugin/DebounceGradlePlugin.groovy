@@ -4,7 +4,7 @@ import com.android.build.gradle.*
 import com.android.build.gradle.api.BaseVariant
 import com.android.builder.model.AndroidProject
 import com.android.utils.FileUtils
-import com.smartdengg.compile.WeavedClass
+import com.smartdengg.compile.WovenClass
 import com.smartdengg.plugin.api.DebounceExtension
 import com.smartdengg.plugin.internal.Utils
 import groovy.util.logging.Slf4j
@@ -51,7 +51,7 @@ class DebounceGradlePlugin implements Plugin<Project> {
 
     project.extensions["${DebounceExtension.NAME}"] = instantiator.newInstance(DebounceExtension)
     def extension = project.extensions.getByName("android") as BaseExtension
-    def variantWeavedClassesMap = new LinkedHashMap<String, List<WeavedClass>>()
+    def variantWeavedClassesMap = new LinkedHashMap<String, List<WovenClass>>()
 
     extension.registerTransform(new DebounceIncrementalTransform(project, variantWeavedClassesMap))
 
@@ -63,7 +63,7 @@ class DebounceGradlePlugin implements Plugin<Project> {
   }
 
   static void createWriteMappingTask(Project project, BaseVariant variant,
-      Map<String, List<WeavedClass>> variantWeavedClassesMap) {
+      Map<String, List<WovenClass>> variantWeavedClassesMap) {
 
     def mappingTaskName = "outputMappingFor${variant.name.capitalize()}"
     Task debounceTask = project.tasks[

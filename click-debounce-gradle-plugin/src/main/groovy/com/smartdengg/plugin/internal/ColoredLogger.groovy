@@ -1,6 +1,10 @@
-package com.smartdengg.plugin.internal;
+package com.smartdengg.plugin.internal
+
+import java.util.logging.Logger
 
 class ColoredLogger {
+
+  private static final Logger LOG = Logger.getLogger(ColoredLogger.class.getName())
 
   private static final String ANSI_RESET = "\033[0m"
   private static final String ANSI_RED = "\033[1;31m"

@@ -133,7 +133,7 @@ These file path is located in **buildDir/outputs/debounce/logs/<variant>/**, as 
 ```
 
 - **files.txt** ：Record the class files consumed by this build，it can help you better understand this build.
-- **classes.txt** ：Record information about the classes and methods weaved in this build.
+- **classes.txt** ：Record information about the classes and methods woven in this build.
 
 
 ## How it works

@@ -9,13 +9,13 @@ import java.util.Set;
  * 作者:  SmartDengg <br>
  * 描述:
  */
-public class WeavedClass implements Serializable {
+public class WovenClass implements Serializable {
   private static final long serialVersionUID = 211794679952616432L;
 
   public String className;
   public Set<String> debouncedMethods = new LinkedHashSet<>();
 
-  WeavedClass(String className) {
+  WovenClass(String className) {
     this.className = className;
   }
 
