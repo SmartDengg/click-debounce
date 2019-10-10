@@ -1,10 +1,6 @@
 package com.smartdengg.plugin.internal
 
-import java.util.logging.Logger
-
 class ColoredLogger {
-
-  private static final Logger LOG = Logger.getLogger(ColoredLogger.class.getName())
 
   private static final String ANSI_RESET = "\033[0m"
   private static final String ANSI_RED = "\033[1;31m"
@@ -12,23 +8,23 @@ class ColoredLogger {
   private static final String ANSI_YELLOW = "\033[1;33m"
   private static final String ANSI_BLUE = "\033[1;34m"
 
-  static def logRed(String text) {
+  static void logRed(String text) {
     println "${ANSI_RED}${text}${ANSI_RESET}"
   }
 
-  static def logGreen(String text) {
+  static void logGreen(String text) {
     println "${ANSI_GREEN}${text}${ANSI_RESET}"
   }
 
-  static def logYellow(String text) {
+  static void logYellow(String text) {
     println "${ANSI_YELLOW}${text}${ANSI_RESET}"
   }
 
-  static def logBlue(String text) {
+  static void logBlue(String text) {
     println "${ANSI_BLUE}${text}${ANSI_RESET}"
   }
 
-  static def log(String text) {
+  static void log(String text) {
     println text
   }
 }

@@ -1,7 +1,6 @@
 package com.smartdengg.plugin.internal
 
 import com.google.common.base.Preconditions
-import com.google.common.collect.Sets
 
 import java.util.concurrent.ForkJoinPool
 import java.util.concurrent.ForkJoinTask
@@ -14,26 +13,21 @@ import java.util.concurrent.ForkJoinTask
 class ForkJoinExecutor {
 
   ForkJoinPool forkJoinPool = new ForkJoinPool()
-  private final Set<ForkJoinTask<?>> futureSet = Sets.newConcurrentHashSet()
+  private final List<ForkJoinTask<?>> subTasks = []
 
   void execute(Closure task) {
-    ForkJoinTask<?> submitted = forkJoinPool.submit(new Runnable() {
+    boolean added = subTasks.add(forkJoinPool.submit(new Runnable() {
       @Override
       void run() {
         task.call()
       }
-    })
-    boolean added = futureSet.add(submitted)
+    }))
     Preconditions.checkState(added, "Failed to add task")
   }
 
   void waitingForAllTasks() {
     try {
-      for (Iterator iterator = futureSet.iterator(); iterator.hasNext();) {
-        ForkJoinTask<?> task = iterator.next()
-        task.join()
-        iterator.remove()
-      }
+      subTasks*.join()
     } finally {
     }
   }

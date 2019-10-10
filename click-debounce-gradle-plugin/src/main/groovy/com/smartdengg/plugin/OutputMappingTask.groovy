@@ -43,14 +43,7 @@ class OutputMappingTask extends DefaultTask {
     inputs.outOfDate { change ->
       if (change.file.directory) return
       if (loggable && Utils.isMatchCondition(change.file.name)) {
-        String state
-        if (change.added) {
-          state = 'ADDED'
-        } else if (change.modified) {
-          state = 'MODIFIED'
-        } else {
-          state = 'FIRST RUN'
-        }
+        String state = change.added ? 'ADDED' : 'MODIFIED'
         ColoredLogger.logGreen("[OUT OF DATE]: ${change.file.name}:$state")
       }
     }
