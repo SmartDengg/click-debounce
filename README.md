@@ -72,7 +72,7 @@ buildscript {
 
 **Step 2**. Apply it in your module:
 
-Supports 'com.android.application', 'com.android.library' and 'com.android.feature'.
+Supports `com.android.application`, `com.android.library` and `com.android.feature`.
 
 ```groovy
 
