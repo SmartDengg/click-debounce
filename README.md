@@ -5,7 +5,7 @@
 
 [![](https://jitpack.io/v/SmartDengg/asm-clickdebounce.svg)](https://jitpack.io/#SmartDengg/asm-clickdebounce)
 
-### Support incremental compilation! Support parallel compilation! Faster compilation speed, and shorter compilation time.
+**Support incremental compilation! Support parallel compilation! Faster compilation speed, and shorter compilation time.**
 
 It is a gradle plugin that uses bytecode weaving technology to solve the click jitter problem of Android applications.
 
