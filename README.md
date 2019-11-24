@@ -83,7 +83,7 @@ apply plugin: 'smartdengg.clickdebounce'
 
 **Step 3 (Optional)**. By adding the following code to your `build.gradle` to enable printe the beautiful log or add an exclusive list to indicate which methods do not need to be debounced. By default, the log is not printed, and process all the methods in the [support](#jump) list.
 
-**It is not recommended to manually add @Debounce annotations to methods, you should use the exclusive feature.**
+**It is not recommended to manually add @Debounce annotations to methods, you should use the **exclusive** feature that which methods should not be debounced. As follows: **
 
 ```groovy
 
