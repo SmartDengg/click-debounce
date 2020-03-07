@@ -5,7 +5,7 @@
 
 [![](https://jitpack.io/v/SmartDengg/asm-clickdebounce.svg)](https://jitpack.io/#SmartDengg/asm-clickdebounce)
 
-### Support incremental compilation! Support parallel compilation! Faster compilation speed, and shorter compilation time.
+**Support incremental compilation! Support parallel compilation! Faster compilation speed, and shorter compilation time.**
 
 It is a gradle plugin that uses bytecode weaving technology to solve the click jitter problem of Android applications.
 
@@ -72,7 +72,7 @@ buildscript {
 
 **Step 2**. Apply it in your module:
 
-Supports 'com.android.application', 'com.android.library' and 'com.android.feature'.
+Supports `com.android.application`, `com.android.library` and `com.android.feature`.
 
 ```groovy
 
@@ -83,7 +83,7 @@ apply plugin: 'smartdengg.clickdebounce'
 
 **Step 3 (Optional)**. By adding the following code to your `build.gradle` to enable printe the beautiful log or add an exclusive list to indicate which methods do not need to be debounced. By default, the log is not printed, and process all the methods in the [support](#jump) list.
 
-**It is not recommended to manually add @Debounce annotations to methods, you should use the exclusive feature.**
+**It is not recommended to manually add @Debounce annotations to methods, you should use the **exclusive** feature that which methods should not be debounced, as follows:**
 
 ```groovy
 
