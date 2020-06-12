@@ -29,14 +29,14 @@ class DebounceGradlePlugin implements Plugin<Project> {
   @Override void apply(Project project) {
 
     def androidPlugin = [AppPlugin, LibraryPlugin, FeaturePlugin]
-            .collect { project.plugins.findPlugin(it) as BasePlugin }
-            .find { it != null }
+        .collect { project.plugins.findPlugin(it) as BasePlugin }
+        .find { it != null }
 
     log.debug('Found Plugin: {}', androidPlugin)
 
     if (!androidPlugin) {
       throw new GradleException(
-              "'com.android.application' or 'com.android.library' or 'com.android.feature' plugin required.")
+          "'com.android.application' or 'com.android.library' or 'com.android.feature' plugin required.")
     }
 
     project.repositories.maven {
@@ -47,7 +47,7 @@ class DebounceGradlePlugin implements Plugin<Project> {
     //        project.dependencies.create(project.rootProject.findProject("click-debounce-runtime")))
 
     project.configurations.implementation.dependencies.add(
-            project.dependencies.create('com.github.SmartDengg:asm-clickdebounce-runtime:1.1.1'))
+        project.dependencies.create('com.github.SmartDengg:asm-clickdebounce-runtime:1.1.1'))
 
     project.extensions["${DebounceExtension.NAME}"] = instantiator.newInstance(DebounceExtension)
     def extension = project.extensions.getByName("android") as BaseExtension
@@ -63,20 +63,20 @@ class DebounceGradlePlugin implements Plugin<Project> {
   }
 
   static void createWriteMappingTask(Project project, BaseVariant variant,
-          Map<String, List<WovenClass>> variantWeavedClassesMap) {
+      Map<String, List<WovenClass>> variantWeavedClassesMap) {
 
     def mappingTaskName = "outputMappingFor${variant.name.capitalize()}"
     Task debounceTask = project.tasks[
-            "transformClassesWith${DebounceIncrementalTransform.TASK_NAME.capitalize()}For${variant.name.capitalize()}"]
+        "transformClassesWith${DebounceIncrementalTransform.TASK_NAME.capitalize()}For${variant.name.capitalize()}"]
 
-    Task outputMappingTask = project.tasks.create(//
-            name: "${mappingTaskName}",
-            type: OutputMappingTask) {
+    OutputMappingTask outputMappingTask = project.tasks.create(//
+        name: "${mappingTaskName}",
+        type: OutputMappingTask) {
       classes = variantWeavedClassesMap
       variantName = variant.name
       outputMappingFile =
-              FileUtils.join(project.buildDir, AndroidProject.FD_OUTPUTS, 'debounce', 'logs',
-                      variant.name, 'classes.txt')
+          FileUtils.join(project.buildDir, AndroidProject.FD_OUTPUTS, 'debounce', 'logs',
+              variant.name, 'classes.txt')
     }
 
     debounceTask.configure(Utils.taskTimedConfigure)
@@ -84,7 +84,7 @@ class DebounceGradlePlugin implements Plugin<Project> {
 
     debounceTask.finalizedBy(outputMappingTask)
     outputMappingTask.onlyIf { debounceTask.didWork }
-    outputMappingTask.inputs.files(debounceTask.outputs.files)
+    outputMappingTask.inputFiles = debounceTask.outputs.files
   }
 }
 
