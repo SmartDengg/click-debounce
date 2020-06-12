@@ -18,6 +18,9 @@ public class SecondActivity extends BaseActivity {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_second);
     Toast.makeText(this, "hello", Toast.LENGTH_SHORT).show();
+
+
+
   }
 
   @Override

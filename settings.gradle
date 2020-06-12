@@ -1,6 +1,7 @@
-include ':click-debounce-sample', ':buildSrc',
-    ':click-debounce-lib-java', ':click-debounce-lib-android',
-    ':click-debounce-gradle-plugin'
+include ':click-debounce-sample',
+        ':click-debounce-lib-java',
+        ':click-debounce-lib-android',
+        ':click-debounce-gradle-plugin'
 
 include ':click-debounce-runtime'
 project(':click-debounce-runtime').projectDir = new File('runtime/click-debounce-runtime')
