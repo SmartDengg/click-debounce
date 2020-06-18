@@ -44,7 +44,7 @@ class Utils {
     def startTime
     doFirst { startTime = System.nanoTime() }
     doLast {
-      ColoredLogger.logRed(
+      ColoredLogger.logPurple(
           "====> COST: ${TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime)} ms")
     }
   }
