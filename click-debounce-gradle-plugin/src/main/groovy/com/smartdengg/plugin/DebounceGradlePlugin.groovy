@@ -2,6 +2,7 @@ package com.smartdengg.plugin
 
 import com.android.build.gradle.*
 import com.android.build.gradle.api.BaseVariant
+import com.android.build.gradle.internal.pipeline.TransformTask
 import com.android.builder.model.AndroidProject
 import com.android.utils.FileUtils
 import com.smartdengg.compile.WovenClass
@@ -12,6 +13,7 @@ import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.internal.reflect.Instantiator
 
 import javax.inject.Inject
@@ -63,28 +65,28 @@ class DebounceGradlePlugin implements Plugin<Project> {
   }
 
   static void createWriteMappingTask(Project project, BaseVariant variant,
-      Map<String, List<WovenClass>> variantWeavedClassesMap) {
+      Map<String, List<WovenClass>> variantWovenClassesMap) {
 
     def mappingTaskName = "outputMappingFor${variant.name.capitalize()}"
-    Task debounceTask = project.tasks[
-        "transformClassesWith${DebounceIncrementalTransform.TASK_NAME.capitalize()}For${variant.name.capitalize()}"]
+    def transformTaskName = "transformClassesWith${DebounceIncrementalTransform.TASK_NAME.capitalize()}For${variant.name.capitalize()}"
 
-    OutputMappingTask outputMappingTask = project.tasks.create(//
-        name: "${mappingTaskName}",
-        type: OutputMappingTask) {
-      classes = variantWeavedClassesMap
-      variantName = variant.name
-      outputMappingFile =
-          FileUtils.join(project.buildDir, AndroidProject.FD_OUTPUTS, 'debounce', 'logs',
-              variant.name, 'classes.txt')
-    }
+    TaskProvider<TransformTask> debounceTask = project.tasks.named(transformTaskName)
+    TaskProvider<OutputMappingTask> mappingTask = project.tasks.
+        register("${mappingTaskName}", OutputMappingTask) { OutputMappingTask task ->
+          task.classes = variantWovenClassesMap
+          task.variantName = variant.name
+          task.mappingFile =
+              FileUtils.join(project.buildDir, AndroidProject.FD_OUTPUTS, 'debounce', 'logs',
+                  variant.name, 'classes.txt')
+          task.onlyIf { debounceTask.get().didWork }
+          task.inputFiles = debounceTask.get().outputs.files
+        }
 
+    mappingTask.configure(Utils.taskTimedConfigure)
     debounceTask.configure(Utils.taskTimedConfigure)
-    outputMappingTask.configure(Utils.taskTimedConfigure)
-
-    debounceTask.finalizedBy(outputMappingTask)
-    outputMappingTask.onlyIf { debounceTask.didWork }
-    outputMappingTask.inputFiles = debounceTask.outputs.files
+    debounceTask.configure { Task task ->
+      task.finalizedBy(mappingTask)
+    }
   }
 }
 

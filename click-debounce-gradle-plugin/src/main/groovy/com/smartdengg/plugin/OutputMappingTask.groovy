@@ -35,7 +35,7 @@ class OutputMappingTask extends DefaultTask {
   Property<String> variantName = project.objects.property(String.class)
 
   @OutputFile
-  RegularFileProperty outputMappingFile = project.objects.fileProperty()
+  RegularFileProperty mappingFile = project.objects.fileProperty()
 
   @Internal
   MapProperty<String, List<WovenClass>> classes = project.
@@ -45,7 +45,7 @@ class OutputMappingTask extends DefaultTask {
   void writeMapping(InputChanges inputChanges) {
 
     boolean loggable = (project.extensions["$DebounceExtension.NAME"] as DebounceExtension).loggable
-    File mappingFile = outputMappingFile.get().asFile
+    File file = mappingFile.get().asFile
     List<WovenClass> wovenClasses = (List<WovenClass>) classes.get()[variantName.get()]
 
     if (loggable && inputChanges.isIncremental()) {
@@ -56,9 +56,9 @@ class OutputMappingTask extends DefaultTask {
       }
     }
 
-    FileUtils.touch(mappingFile)
-    Files.asCharSink(mappingFile, Charsets.UTF_8).write("")
-    PrintWriter writer = PrintWriterUtil.createPrintWriterOut(mappingFile)
+    FileUtils.touch(file)
+    Files.asCharSink(file, Charsets.UTF_8).write("")
+    PrintWriter writer = PrintWriterUtil.createPrintWriterOut(file)
 
     try {
       wovenClasses.findAll {
@@ -71,9 +71,9 @@ class OutputMappingTask extends DefaultTask {
         }
       }
     } finally {
-      PrintWriterUtil.closePrintWriter(mappingFile, writer)
+      PrintWriterUtil.closePrintWriter(file, writer)
       ColoredLogger.log(
-          "Wrote TXT report to file://${PrintWriterUtil.fileName(mappingFile)}")
+          "Wrote TXT report to file://${PrintWriterUtil.fileName(file)}")
     }
   }
 }
