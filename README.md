@@ -38,7 +38,7 @@ I also wrote a **[BLOG](https://www.jianshu.com/p/28751130c038)** to share my id
 ## Requirements
 
 - JDK 1.7 +
-- Gradle 3.0.0 +
+- Gradle 4.0.0 +
 
 ## To build
 
@@ -64,7 +64,7 @@ buildscript {
     }
     dependencies {
         ...
-        classpath 'com.github.SmartDengg.click-debounce:click-debounce-gradle-plugin:2.0.0'
+        classpath 'com.github.SmartDengg.click-debounce:click-debounce-gradle-plugin:2.1.0'
     }
 }
 
