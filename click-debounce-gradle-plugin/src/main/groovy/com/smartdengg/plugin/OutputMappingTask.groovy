@@ -60,6 +60,8 @@ class OutputMappingTask extends DefaultTask {
     Files.asCharSink(file, Charsets.UTF_8).write("")
     PrintWriter writer = PrintWriterUtil.createPrintWriterOut(file)
 
+    if (wovenClasses.empty) return
+
     try {
       wovenClasses.findAll {
         it.hasDebouncedMethod()

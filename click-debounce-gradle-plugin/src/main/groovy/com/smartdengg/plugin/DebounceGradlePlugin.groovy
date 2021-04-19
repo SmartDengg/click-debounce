@@ -45,6 +45,10 @@ class DebounceGradlePlugin implements Plugin<Project> {
       url "https://jitpack.io"
     }
 
+    println()
+    println "\033[1;31m #### 欢迎使用 click-debounce 编译插件，任何疑问请联系 hi4joker@gmail.com #### \033[0m"
+    println()
+
     //    project.configurations.implementation.dependencies.add(
     //        project.dependencies.create(project.rootProject.findProject("click-debounce-runtime")))
 

@@ -4,5 +4,12 @@
     <annotationProcessing>
       <profile default="true" name="Default" enabled="true" />
     </annotationProcessing>
+    <bytecodeTargetLevel target="1.7">
+      <module name="debounce-compiler.buildSrc" target="1.8" />
+      <module name="debounce-compiler.click-debounce-gradle-plugin" target="1.8" />
+      <module name="debounce-compiler.click-debounce-lib-android" target="1.8" />
+      <module name="debounce-compiler.click-debounce-runtime" target="1.8" />
+      <module name="debounce-compiler.click-debounce-sample" target="1.8" />
+    </bytecodeTargetLevel>
   </component>
 </project>
